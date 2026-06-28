@@ -39,3 +39,16 @@ textarea {
     font-size: 16px;
   }
 }
+
+/* Get Round Mate marketing site brand colour. Scoped so it never affects the app. */
+.marketing {
+  --brand: #c2410c;
+  --brand-dark: #9a3412;
+  --brand-tint: #fff1e8;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marketing [data-reveal] {
+    transition-duration: 0.01ms !important;
+  }
+}
