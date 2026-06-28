@@ -1,5 +1,5 @@
 /**
- * Single place to wire up the Get Round Mate marketing site once the real
+ * Single place to wire up the RoundMate marketing site once the real
  * links exist. Edit the values below — nothing else needs to change.
  */
 

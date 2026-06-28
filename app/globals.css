@@ -40,7 +40,7 @@ textarea {
   }
 }
 
-/* Get Round Mate marketing site brand colour. Scoped so it never affects the app. */
+/* RoundMate marketing site brand colour. Scoped so it never affects the app. */
 .marketing {
   --brand: #c2410c;
   --brand-dark: #9a3412;

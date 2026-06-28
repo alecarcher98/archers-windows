@@ -54,10 +54,10 @@ The easiest way to deploy your Next.js app is to use the [Vercel Platform](https
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
 
-## Get Round Mate marketing site
+## RoundMate marketing site
 
-A public, no-login marketing site for "Get Round Mate" (the productized,
-done-for-you version of this app) lives alongside the private app under
+A public, no-login marketing site for "RoundMate" (the productized,
+done-for-you version of this app, at getroundmate.co.uk) lives alongside the private app under
 `app/marketing/`. It is completely separate from the scheduler above — no
 existing route, layout, or data is touched.
 

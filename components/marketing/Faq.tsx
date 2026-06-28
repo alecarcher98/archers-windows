@@ -8,7 +8,7 @@ const FAQS = [
   },
   {
     q: "Do my customers need to download anything?",
-    a: "No. Get Round Mate is for you, not your customers. They just keep getting cleaned and keep paying the same way they do now.",
+    a: "No. RoundMate is for you, not your customers. They just keep getting cleaned and keep paying the same way they do now.",
   },
   {
     q: "What if I want to change something after setup?",
@@ -59,14 +59,14 @@ export function Faq() {
                 Get your round set up — £99
               </a>
               <a
-                href={whatsAppLink("Hi — I'd like to find out about Get Round Mate")}
+                href={whatsAppLink("Hi — I'd like to find out about RoundMate")}
                 className="w-full rounded-full border border-zinc-700 px-7 py-4 text-base font-semibold text-white transition hover:border-zinc-500 sm:w-auto"
               >
                 WhatsApp me
               </a>
             </div>
             <a
-              href={mailtoLink("Get Round Mate enquiry")}
+              href={mailtoLink("RoundMate enquiry")}
               className="mt-4 inline-block text-sm text-zinc-400 hover:text-zinc-200"
             >
               Or email {CONTACT_EMAIL}

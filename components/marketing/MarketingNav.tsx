@@ -1,11 +1,13 @@
+import Image from "next/image";
 import Link from "next/link";
 
 export function MarketingNav() {
   return (
     <header className="sticky top-0 z-40 border-b border-zinc-200 bg-white/90 backdrop-blur">
       <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 sm:px-6">
-        <Link href="/marketing" className="text-lg font-bold tracking-tight text-zinc-900">
-          Get Round Mate
+        <Link href="/marketing" className="flex items-center gap-2">
+          <Image src="/marketing/mark.png" alt="" width={32} height={32} className="h-8 w-8" />
+          <span className="text-lg font-bold tracking-tight text-zinc-900">RoundMate</span>
         </Link>
         <nav className="hidden items-center gap-6 text-sm font-medium text-zinc-700 sm:flex">
           <a href="/marketing#what-it-does" className="hover:text-zinc-900">
