@@ -49,7 +49,7 @@ export function Faq() {
           <div className="mt-14 rounded-3xl bg-zinc-900 p-8 text-center sm:p-12">
             <h3 className="text-2xl font-bold text-white sm:text-3xl">Ready to get your round sorted?</h3>
             <p className="mt-3 text-zinc-300">
-              Send your list, get set up in 24 hours, open the app. That's it.
+              Send your list, get set up in 24 hours, open the app. That&rsquo;s it.
             </p>
             <div className="mt-7 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
               <a
