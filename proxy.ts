@@ -4,13 +4,13 @@ import { authCookieName, verifySessionCookieValue } from "@/lib/auth";
 
 const PUBLIC_PATH_PREFIXES = ["/login", "/api/auth/login", "/api/auth/logout", "/marketing"];
 
-// getroundmate.co.uk gets clean URLs that map onto the isolated /marketing
-// route segment. Every other host (the app's own domain, previews,
-// localhost) is untouched and keeps redirecting "/" to "/schedule".
-const MARKETING_HOSTS = new Set(["getroundmate.co.uk", "www.getroundmate.co.uk"]);
-const MARKETING_HOST_ROUTES: Record<string, string> = {
+// RoundMate's marketing site is the home page on every host (production,
+// previews, localhost). "/archers" is the entry point into the private,
+// single-shared-login scheduler app that used to live at "/".
+const PATH_ALIASES: Record<string, string> = {
   "/": "/marketing",
   "/demo": "/marketing/demo",
+  "/archers": "/schedule",
 };
 
 function isPublicPath(pathname: string) {
@@ -19,16 +19,6 @@ function isPublicPath(pathname: string) {
 
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
-
-  const host = req.headers.get("host")?.split(":")[0];
-  if (host && MARKETING_HOSTS.has(host)) {
-    const rewriteTo = MARKETING_HOST_ROUTES[pathname];
-    if (rewriteTo) {
-      const url = req.nextUrl.clone();
-      url.pathname = rewriteTo;
-      return NextResponse.rewrite(url);
-    }
-  }
 
   if (
     pathname.startsWith("/_next") ||
@@ -41,14 +31,31 @@ export async function proxy(req: NextRequest) {
     return NextResponse.next();
   }
 
-  if (isPublicPath(pathname)) return NextResponse.next();
+  // Resolve the effective target path first, then run every auth/public
+  // check against that target — never rewrite-and-return before the auth
+  // check, or an alias like "/archers" would bypass login entirely.
+  const target = PATH_ALIASES[pathname] ?? pathname;
+
+  if (isPublicPath(target)) {
+    if (target === pathname) return NextResponse.next();
+    const url = req.nextUrl.clone();
+    url.pathname = target;
+    return NextResponse.rewrite(url);
+  }
 
   const cookie = req.cookies.get(authCookieName())?.value;
   const ok = await verifySessionCookieValue(cookie);
-  if (ok) return NextResponse.next();
+  if (ok) {
+    if (target === pathname) return NextResponse.next();
+    const url = req.nextUrl.clone();
+    url.pathname = target;
+    return NextResponse.rewrite(url);
+  }
 
   const url = req.nextUrl.clone();
   url.pathname = "/login";
+  // Keep the alias (e.g. "/archers"), not the resolved target, so the
+  // post-login redirect lands back on the friendly URL.
   url.searchParams.set("next", pathname);
   return NextResponse.redirect(url);
 }

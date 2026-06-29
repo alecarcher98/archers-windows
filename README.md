@@ -57,27 +57,33 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 ## RoundMate marketing site
 
 A public, no-login marketing site for "RoundMate" (the productized,
-done-for-you version of this app, at getroundmate.co.uk) lives alongside the private app under
-`app/marketing/`. It is completely separate from the scheduler above — no
-existing route, layout, or data is touched.
+done-for-you version of this app) lives alongside the private scheduler
+under `app/marketing/`. **It is now the home page** — `/` loads the
+marketing site on every domain (production, Vercel previews, and
+localhost alike), and the private scheduler moved to `/archers`.
 
+- **Routing**: `proxy.ts` resolves a small alias map before running its
+  auth check — `/` → `/marketing`, `/demo` → `/marketing/demo`, `/archers`
+  → `/schedule` — and the browser URL bar stays on the friendly path
+  thanks to a rewrite (not a redirect). `/marketing` and `/marketing/demo`
+  stay exempt from the login gate, so no session cookie is needed there.
+  `/archers` resolves to `/schedule`, which still requires login exactly
+  as before — visiting it while logged out sends you to `/login?next=...`
+  first.
 - **Preview locally**: run `pnpm dev` and open
-  [http://localhost:3000/marketing](http://localhost:3000/marketing). The
-  `/marketing` and `/marketing/demo` paths are explicitly exempted from the
-  login gate in `proxy.ts`, so no session cookie is needed. Every other
-  route (`/schedule`, `/today`, etc.) requires login exactly as before.
-- **Point getroundmate.co.uk at this project**: add the domain in the
-  Vercel dashboard for this project. `proxy.ts` checks the request's `Host`
-  header — when it's `getroundmate.co.uk` or `www.getroundmate.co.uk`, `/`
-  and `/demo` are rewritten to `/marketing` and `/marketing/demo` so the
-  new domain gets clean URLs. Any other domain (this app's own production
-  domain, Vercel preview URLs, localhost) is unaffected and keeps its
-  current behaviour.
+  [http://localhost:3000](http://localhost:3000) for the marketing site, or
+  [http://localhost:3000/archers](http://localhost:3000/archers) for the
+  scheduler.
+- **Point getroundmate.co.uk at this project**: just add the domain in the
+  Vercel dashboard — no host-specific logic is needed any more, since `/`
+  is the marketing site on every domain.
 - **Fill in the real links**: edit `lib/marketingConfig.ts`. It's the only
   file you need to touch:
   - `STRIPE_PAYMENT_LINK_URL` — the Stripe Payment Link for the £99 setup fee.
-  - `ARCHERS_WINDOWS_LIVE_URL` — the production URL of this Archer's Windows
-    instance, linked from the marketing site as free, live proof.
+  - `ARCHERS_WINDOWS_LIVE_URL` — defaults to the internal `/archers` link
+    (the real, live round running in this same app). Change it only if you
+    want the marketing site to point at a different live instance.
   - `DEMO_VIDEO_EMBED_URL` — a YouTube/Loom embed URL for the 60-second demo.
   - `CONTACT_WHATSAPP_NUMBER` / `CONTACT_EMAIL` — contact details shown in
-    the footer and final call-to-action.
+    the footer and final call-to-action. The WhatsApp number is already
+    set; update `CONTACT_EMAIL` if needed.

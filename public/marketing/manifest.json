@@ -2,7 +2,7 @@
   "name": "RoundMate",
   "short_name": "RoundMate",
   "description": "Your round, simplified — done-for-you round management for window cleaners.",
-  "start_url": "/marketing",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#c2410c",
