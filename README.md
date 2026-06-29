@@ -74,17 +74,18 @@ localhost alike), and the private scheduler moved to `/archers`.
   [http://localhost:3000](http://localhost:3000) for the marketing site, or
   [http://localhost:3000/archers](http://localhost:3000/archers) for the
   scheduler.
-- **Point getroundmate.co.uk at this project**: just add the domain in the
+- **Point roundmate.org at this project**: just add the domain in the
   Vercel dashboard — no host-specific logic is needed any more, since `/`
-  is the marketing site on every domain.
-- **Fill in the real links**: edit `lib/marketingConfig.ts`. It's the only
-  file you need to touch:
-  - `STRIPE_PAYMENT_LINK_URL` — the Stripe Payment Link for the £99 setup fee.
-  - `ARCHERS_WINDOWS_LIVE_URL` — defaults to the internal `/archers` link.
-    Not currently linked from any public marketing page (the real round is
-    private), but kept here in case it's wired in elsewhere later.
-  - `CONTACT_WHATSAPP_NUMBER` — the only contact method shown in the footer
-    and final call-to-action (no email support exists, by design).
+  is the marketing site on every domain. `app/marketing/layout.tsx` hardcodes
+  this as `metadataBase` for OG tags (never use `VERCEL_URL` for that — it's
+  the per-deployment preview URL, not the custom domain).
+- **Fill in the real links**: edit `lib/marketingConfig.ts`:
+  - `ARCHERS_WINDOWS_LIVE_URL` — the internal `/archers` link. Linked from the
+    founder-story section as proof of a real, live round.
+  - `CONTACT_WHATSAPP_NUMBER` — the only contact method on the site (no email
+    support exists, by design). Every "£99" CTA also links here — the £99 is
+    taken via a Stripe Payment Link sent manually inside that chat, not a
+    site button.
 - **`/demo`** is a live, interactive sandbox (`components/demo/`), not a
   video — a fake business ("Cleaning Co") seeded with fake customers and
   jobs entirely client-side (`lib/demoSeed.ts`). Visitors can mark jobs

@@ -1,4 +1,4 @@
-import { STRIPE_PAYMENT_LINK_URL, whatsAppLink } from "@/lib/marketingConfig";
+import { whatsAppLink } from "@/lib/marketingConfig";
 import { RevealOnScroll } from "./RevealOnScroll";
 
 const FAQS = [
@@ -16,7 +16,7 @@ const FAQS = [
   },
   {
     q: "Is this only for window cleaning?",
-    a: "No — it's built around any cleaning round: window cleaning, general or domestic cleaning, gutter clearing, anything with repeat customers on a schedule. If that's your business, it'll fit.",
+    a: "It's built for window cleaning rounds first — that's what it was made for. The same setup fits any round with repeat customers on a schedule (general cleaning, gutters), but window cleaning is what it's tuned for.",
   },
 ];
 
@@ -53,7 +53,7 @@ export function Faq() {
             </p>
             <div className="mt-7 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
               <a
-                href={STRIPE_PAYMENT_LINK_URL}
+                href={whatsAppLink("Hi — I'd like to get my round set up for £99")}
                 className="w-full rounded-full bg-[var(--brand)] px-7 py-4 text-base font-semibold text-white shadow-md transition hover:bg-[var(--brand-dark)] sm:w-auto"
               >
                 Get your round set up — £99

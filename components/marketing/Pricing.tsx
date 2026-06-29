@@ -1,4 +1,4 @@
-import { STRIPE_PAYMENT_LINK_URL } from "@/lib/marketingConfig";
+import { whatsAppLink } from "@/lib/marketingConfig";
 import { RevealOnScroll } from "./RevealOnScroll";
 
 const INCLUDED = [
@@ -37,14 +37,16 @@ export function Pricing() {
               ))}
             </ul>
             <a
-              href={STRIPE_PAYMENT_LINK_URL}
+              href={whatsAppLink("Hi — I'd like to get my round set up for £99")}
               className="mt-7 block w-full rounded-full bg-[var(--brand)] px-7 py-4 text-base font-semibold text-white shadow-md transition hover:bg-[var(--brand-dark)]"
             >
               Get your round set up — £99
             </a>
             <p className="mt-4 text-xs text-zinc-500">
-              Optional ongoing hosting &amp; support: £15/month. Cancel any time — your data stays
-              yours either way.
+              Optional ongoing hosting &amp; support: £15/month — for tweaks and changes after
+              setup, not a kill switch. If you ever stop paying it, the app keeps working; you
+              just stop getting active support. Cancel any time — your data stays yours either
+              way.
             </p>
           </div>
         </RevealOnScroll>

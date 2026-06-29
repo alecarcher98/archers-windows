@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { STRIPE_PAYMENT_LINK_URL } from "@/lib/marketingConfig";
+import { whatsAppLink } from "@/lib/marketingConfig";
 import { DEMO_BUSINESS_NAME } from "@/lib/demoSeed";
 import { DemoProvider, useDemo } from "@/components/demo/DemoProvider";
 import { DemoDayView } from "@/components/demo/DemoDayView";
@@ -76,7 +76,7 @@ function DemoAppShell() {
           This is your round, set up and ready in 24 hours.
         </p>
         <a
-          href={STRIPE_PAYMENT_LINK_URL}
+          href={whatsAppLink("Hi — I'd like to get my round set up for £99")}
           className="mt-3 inline-flex w-full items-center justify-center rounded-full bg-[var(--brand)] px-6 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-[var(--brand-dark)]"
         >
           Get your round set up — £99

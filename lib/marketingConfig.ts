@@ -3,8 +3,11 @@
  * links exist. Edit the values below — nothing else needs to change.
  */
 
-/** Stripe Payment Link for the £99 founder setup. Replace "#" once created. */
-export const STRIPE_PAYMENT_LINK_URL = "#";
+/**
+ * The £99 setup fee is taken via a Stripe Payment Link sent manually inside
+ * the WhatsApp chat once you've got a lead's customer list — not a site
+ * button. Every "£99" CTA on the site links to WhatsApp instead.
+ */
 
 /** The real, live Archer's Windows round — runs in this same app at "/archers". */
 export const ARCHERS_WINDOWS_LIVE_URL = "/archers";

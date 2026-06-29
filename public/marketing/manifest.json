@@ -1,7 +1,7 @@
 {
   "name": "RoundMate",
   "short_name": "RoundMate",
-  "description": "Your round, simplified — done-for-you round management for cleaning businesses.",
+  "description": "Your round, simplified — done-for-you round management for window cleaners.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",

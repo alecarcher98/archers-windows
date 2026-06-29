@@ -195,50 +195,48 @@ function AddDemoCustomerCard({
               />
             </label>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <label className="grid gap-1">
-              <span className="text-sm font-medium text-zinc-900">Price (£)</span>
-              <input
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                inputMode="decimal"
-                className="h-12 rounded-xl border border-zinc-200 bg-white px-3 text-base text-zinc-900 shadow-sm outline-none focus:border-[var(--brand)]"
-              />
-            </label>
-            <label className="grid gap-1">
-              <span className="text-sm font-medium text-zinc-900">Frequency</span>
-              <div className="flex gap-2">
-                {[4, 8].map((n) => (
-                  <button
-                    key={n}
-                    type="button"
-                    onClick={() => {
-                      setFrequencyWeeks(n);
-                      setOneOff(false);
-                    }}
-                    className={[
-                      "h-12 flex-1 rounded-xl text-sm font-semibold",
-                      !oneOff && frequencyWeeks === n
-                        ? "bg-[var(--brand)] text-white"
-                        : "border border-zinc-200 text-zinc-600",
-                    ].join(" ")}
-                  >
-                    {n}w
-                  </button>
-                ))}
+          <label className="grid gap-1">
+            <span className="text-sm font-medium text-zinc-900">Price (£)</span>
+            <input
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+              inputMode="decimal"
+              className="h-12 w-full rounded-xl border border-zinc-200 bg-white px-3 text-base text-zinc-900 shadow-sm outline-none focus:border-[var(--brand)]"
+            />
+          </label>
+          <label className="grid gap-1">
+            <span className="text-sm font-medium text-zinc-900">Frequency</span>
+            <div className="flex flex-wrap gap-2">
+              {[4, 8].map((n) => (
                 <button
+                  key={n}
                   type="button"
-                  onClick={() => setOneOff(true)}
+                  onClick={() => {
+                    setFrequencyWeeks(n);
+                    setOneOff(false);
+                  }}
                   className={[
-                    "h-12 flex-1 rounded-xl text-sm font-semibold",
-                    oneOff ? "bg-zinc-900 text-white" : "border border-zinc-200 text-zinc-600",
+                    "h-12 rounded-xl px-5 text-sm font-semibold",
+                    !oneOff && frequencyWeeks === n
+                      ? "bg-[var(--brand)] text-white"
+                      : "border border-zinc-200 text-zinc-600",
                   ].join(" ")}
                 >
-                  One-off
+                  Every {n}w
                 </button>
-              </div>
-            </label>
-          </div>
+              ))}
+              <button
+                type="button"
+                onClick={() => setOneOff(true)}
+                className={[
+                  "h-12 rounded-xl px-5 text-sm font-semibold",
+                  oneOff ? "bg-zinc-900 text-white" : "border border-zinc-200 text-zinc-600",
+                ].join(" ")}
+              >
+                One-off
+              </button>
+            </div>
+          </label>
 
           <label className="grid gap-1">
             <span className="text-sm font-medium text-zinc-900">Notes (e.g. gate code)</span>
