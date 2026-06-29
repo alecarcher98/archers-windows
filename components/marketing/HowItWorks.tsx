@@ -3,7 +3,7 @@ import { RevealOnScroll } from "./RevealOnScroll";
 const STEPS = [
   {
     title: "Send me your customer list",
-    body: "Whatever you've got — a spreadsheet, a notebook photo, a Squeegee export. However it lives now is fine.",
+    body: "Whatever you've got — a spreadsheet, a notebook photo, an export from another system. However it lives now is fine.",
   },
   {
     title: "I set everything up in 24 hours",

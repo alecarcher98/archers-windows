@@ -61,7 +61,7 @@ export function WhatItDoes() {
               <div className="mt-3 flex flex-col gap-2">
                 <JobRow name="Mrs Johnson" detail="Oak Avenue · 8-weekly" tone="paid" label="Paid" />
                 <JobRow name="Mr Patel" detail="Oak Avenue · 4-weekly" tone="due" label="Due" />
-                <JobRow name="The Greens" detail="Birch Close · 8-weekly" tone="skipped" label="Skipped – rain" />
+                <JobRow name="The Greens" detail="Birch Close · 8-weekly" tone="skipped" label="Skipped – rescheduled" />
               </div>
               <button className="mt-4 w-full rounded-xl bg-zinc-900 py-2.5 text-sm font-semibold text-white">
                 Mark street done
@@ -81,7 +81,7 @@ export function WhatItDoes() {
               </div>
               <div className="mt-3 rounded-xl border border-zinc-100 bg-zinc-50 p-3">
                 <p className="text-xs font-semibold text-zinc-600">Last visit</p>
-                <p className="mt-1 text-sm text-zinc-700">Skipped — rain. Rebooked for next Tuesday.</p>
+                <p className="mt-1 text-sm text-zinc-700">Skipped — rescheduled by customer. Rebooked for next Tuesday.</p>
               </div>
             </PhoneMockup>
           </RevealOnScroll>

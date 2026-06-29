@@ -15,8 +15,8 @@ const FAQS = [
     a: "Message me on WhatsApp or email and I'll update it. Most changes take minutes.",
   },
   {
-    q: "Is this just for window cleaners?",
-    a: "It's built around rounds — window cleaning, gutter clearing, anything with repeat customers on a schedule. If that's you, it'll fit.",
+    q: "Is this only for window cleaning?",
+    a: "No — it's built around any cleaning round: window cleaning, general or domestic cleaning, gutter clearing, anything with repeat customers on a schedule. If that's your business, it'll fit.",
   },
 ];
 
