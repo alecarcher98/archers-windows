@@ -47,7 +47,7 @@ export function Hero() {
               href="/demo"
               className="w-full rounded-full border border-zinc-300 px-7 py-4 text-base font-semibold text-zinc-800 transition hover:border-zinc-400 hover:bg-zinc-50 sm:w-auto"
             >
-              See it live
+              Watch the demo
             </Link>
           </div>
         </RevealOnScroll>

@@ -80,9 +80,9 @@ localhost alike), and the private scheduler moved to `/archers`.
 - **Fill in the real links**: edit `lib/marketingConfig.ts`. It's the only
   file you need to touch:
   - `STRIPE_PAYMENT_LINK_URL` — the Stripe Payment Link for the £99 setup fee.
-  - `ARCHERS_WINDOWS_LIVE_URL` — defaults to the internal `/archers` link
-    (the real, live round running in this same app). Change it only if you
-    want the marketing site to point at a different live instance.
+  - `ARCHERS_WINDOWS_LIVE_URL` — defaults to the internal `/archers` link.
+    Not currently linked from any public marketing page (the real round is
+    private), but kept here in case it's wired in elsewhere later.
   - `DEMO_VIDEO_EMBED_URL` — a YouTube/Loom embed URL for the 60-second demo.
   - `CONTACT_WHATSAPP_NUMBER` / `CONTACT_EMAIL` — contact details shown in
     the footer and final call-to-action. The WhatsApp number is already

@@ -1,10 +1,5 @@
 import Image from "next/image";
-import {
-  ARCHERS_WINDOWS_LIVE_URL,
-  CONTACT_EMAIL,
-  mailtoLink,
-  whatsAppLink,
-} from "@/lib/marketingConfig";
+import { CONTACT_EMAIL, mailtoLink, whatsAppLink } from "@/lib/marketingConfig";
 
 export function MarketingFooter() {
   return (
@@ -22,14 +17,6 @@ export function MarketingFooter() {
             </p>
           </div>
           <div className="flex flex-col gap-2 text-sm">
-            <a
-              href={ARCHERS_WINDOWS_LIVE_URL}
-              target="_blank"
-              rel="noreferrer"
-              className="font-semibold text-[var(--brand)] hover:underline"
-            >
-              See the real round live →
-            </a>
             <a
               href={whatsAppLink("Hi — I'd like to find out about RoundMate")}
               className="text-zinc-700 hover:text-zinc-900"
