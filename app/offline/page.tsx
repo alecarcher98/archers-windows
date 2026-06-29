@@ -9,7 +9,7 @@ export default function OfflinePage() {
       </p>
       <Link
         href="/schedule"
-        className="mt-6 inline-flex h-12 items-center justify-center rounded-xl bg-zinc-900 px-4 text-sm font-semibold text-white"
+        className="mt-6 inline-flex h-12 items-center justify-center rounded-full bg-[var(--brand)] px-4 text-sm font-semibold text-white"
       >
         Try Schedule
       </Link>

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { authCookieName, checkCredentials, createSessionCookieValue } from "@/lib/auth";
+import { authCookieName, createSessionCookieValue } from "@/lib/auth";
+import { verifyCredentials } from "@/lib/credentials";
 
 export async function POST(req: Request) {
   let username = "";
@@ -19,7 +20,7 @@ export async function POST(req: Request) {
     password = String(form.get("password") ?? "");
   }
 
-  if (!checkCredentials(username, password)) {
+  if (!(await verifyCredentials(username, password))) {
     return NextResponse.json({ ok: false, error: "Invalid login" }, { status: 401 });
   }
 

@@ -50,9 +50,9 @@ export function WeekSummaryPanel({ anchorDate }: { anchorDate: string }) {
   const gap = e.expectedPence - e.totalPence;
 
   return (
-    <section className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-      <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">Week summary</p>
-      <p className="mt-0.5 text-xs text-zinc-600 dark:text-zinc-400">
+    <section className="rounded-3xl border border-zinc-200 bg-white p-4 shadow-sm">
+      <p className="text-sm font-semibold text-zinc-900">Week summary</p>
+      <p className="mt-0.5 text-xs text-zinc-600">
         {formatDisplayDateRange(summary.start, summary.end)}
       </p>
       <ul className="mt-3 space-y-2 text-sm">
@@ -70,7 +70,7 @@ export function WeekSummaryPanel({ anchorDate }: { anchorDate: string }) {
           <span className="text-zinc-600">Not home (skipped)</span>
           <span className="font-semibold">{summary.skipped}</span>
         </li>
-        <li className="flex justify-between border-t border-zinc-200 pt-2 dark:border-zinc-800">
+        <li className="flex justify-between border-t border-zinc-200 pt-2">
           <span className="text-zinc-600">Expected</span>
           <span className="font-semibold">{gbp(e.expectedPence)}</span>
         </li>

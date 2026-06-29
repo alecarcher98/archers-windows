@@ -52,8 +52,8 @@ export function EarningsClient() {
   }
 
   return (
-    <div className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-      <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">Custom range</p>
+    <div className="rounded-3xl border border-zinc-200 bg-white p-4 shadow-sm">
+      <p className="text-sm font-semibold text-zinc-900">Custom range</p>
       <div className="mt-3 grid grid-cols-2 gap-3">
         <label className="grid gap-1">
           <span className="text-sm font-medium">Start</span>
@@ -61,7 +61,7 @@ export function EarningsClient() {
             type="date"
             value={start}
             onChange={(e) => setStart(e.target.value)}
-            className="h-12 w-full rounded-xl border border-zinc-200 px-3 dark:border-zinc-800 dark:bg-zinc-950"
+            className="h-12 w-full rounded-xl border border-zinc-200 px-3"
           />
         </label>
         <label className="grid gap-1">
@@ -70,7 +70,7 @@ export function EarningsClient() {
             type="date"
             value={end}
             onChange={(e) => setEnd(e.target.value)}
-            className="h-12 w-full rounded-xl border border-zinc-200 px-3 dark:border-zinc-800 dark:bg-zinc-950"
+            className="h-12 w-full rounded-xl border border-zinc-200 px-3"
           />
         </label>
       </div>
@@ -80,14 +80,14 @@ export function EarningsClient() {
           type="button"
           onClick={() => void run()}
           disabled={pending || !start || !end}
-          className="h-12 rounded-xl bg-zinc-900 text-sm font-semibold text-white disabled:opacity-40 dark:bg-zinc-50 dark:text-zinc-900"
+          className="h-12 rounded-full bg-zinc-900 text-sm font-semibold text-white disabled:opacity-40"
         >
           {pending ? "…" : "Calculate"}
         </button>
         <a
           href={start && end ? `/api/earnings?start=${start}&end=${end}&format=csv` : "#"}
           className={[
-            "flex h-12 items-center justify-center rounded-xl border border-zinc-200 text-sm font-semibold",
+            "flex h-12 items-center justify-center rounded-full border border-zinc-200 text-sm font-semibold",
             start && end ? "" : "pointer-events-none opacity-40",
           ].join(" ")}
         >
@@ -98,7 +98,7 @@ export function EarningsClient() {
       {error ? <p className="mt-2 text-sm font-medium text-red-600">{error}</p> : null}
 
       {result ? (
-        <div className="mt-4 rounded-xl border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-800 dark:bg-zinc-900">
+        <div className="mt-4 rounded-2xl border border-zinc-200 bg-zinc-50 p-3">
           <p className="text-sm font-semibold">
             Collected: {formatMoneyPounds(result.totalPence)}
           </p>

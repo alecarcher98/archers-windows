@@ -22,11 +22,9 @@ export default async function CustomerEditPage({
         ) : customer ? (
           <CustomerForm mode="edit" customer={customer} />
         ) : (
-          <div className="rounded-3xl border border-zinc-200 bg-white p-6 text-center shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-            <p className="text-sm font-medium text-zinc-900 dark:text-zinc-50">
-              Client not found.
-            </p>
-            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+          <div className="rounded-3xl border border-zinc-200 bg-white p-6 text-center shadow-sm">
+            <p className="text-sm font-medium text-zinc-900">Client not found.</p>
+            <p className="mt-1 text-sm text-zinc-500">
               They may have been removed from the database.
             </p>
           </div>

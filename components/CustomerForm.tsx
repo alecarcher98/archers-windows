@@ -60,7 +60,7 @@ async function deleteCustomer(id: string) {
 const presetFrequencies = [1, 2, 3, 4, 6, 8] as const;
 
 const inputClasses =
-  "h-12 w-full rounded-xl border border-zinc-200 bg-white px-3 text-base shadow-sm outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-100 dark:border-zinc-800 dark:bg-zinc-950 dark:focus:border-violet-700 dark:focus:ring-violet-900/40";
+  "h-12 w-full rounded-xl border border-zinc-200 bg-white px-3 text-base shadow-sm outline-none transition focus:border-[var(--brand)] focus:ring-2 focus:ring-[var(--brand-tint)]";
 
 export function CustomerForm({
   mode,
@@ -196,7 +196,7 @@ export function CustomerForm({
 
   return (
     <div className="flex flex-col gap-4 pb-28">
-      <div className="flex items-center gap-3 rounded-3xl border border-zinc-200/80 bg-gradient-to-br from-white to-violet-50/60 p-4 shadow-sm dark:border-zinc-800 dark:from-zinc-950 dark:to-violet-950/10">
+      <div className="flex items-center gap-3 rounded-3xl border border-zinc-200 bg-gradient-to-br from-white to-[var(--brand-tint)] p-4 shadow-sm">
         <div
           className={[
             "flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-base font-bold",
@@ -206,10 +206,8 @@ export function CustomerForm({
           {initialsFromName(previewName)}
         </div>
         <div className="min-w-0">
-          <p className="truncate text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-            {previewName}
-          </p>
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">
+          <p className="truncate text-lg font-semibold text-zinc-900">{previewName}</p>
+          <p className="text-sm text-zinc-500">
             {mode === "new"
               ? "Fill in the details below — saved straight to your client database."
               : "Changes save directly to your client database."}
@@ -218,7 +216,7 @@ export function CustomerForm({
       </div>
 
       {warnings.length ? (
-        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-900/50 dark:bg-amber-500/10 dark:text-amber-200">
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
           {warnings.map((w) => (
             <p key={w} className="flex items-start gap-1.5">
               <span aria-hidden>⚠</span>
@@ -297,8 +295,8 @@ export function CustomerForm({
                 className={[
                   "h-10 rounded-full px-4 text-sm font-semibold transition",
                   state.frequencyWeeks === n
-                    ? "bg-gradient-to-br from-violet-600 to-indigo-600 text-white shadow-sm shadow-indigo-600/30"
-                    : "border border-zinc-200 text-zinc-600 hover:border-zinc-300 dark:border-zinc-800 dark:text-zinc-400",
+                    ? "bg-[var(--brand)] text-white shadow-sm"
+                    : "border border-zinc-200 text-zinc-600 hover:border-zinc-300",
                 ].join(" ")}
               >
                 Every {n}w
@@ -310,8 +308,8 @@ export function CustomerForm({
               className={[
                 "h-10 rounded-full px-4 text-sm font-semibold transition",
                 state.frequencyWeeks === "custom"
-                  ? "bg-gradient-to-br from-violet-600 to-indigo-600 text-white shadow-sm shadow-indigo-600/30"
-                  : "border border-zinc-200 text-zinc-600 hover:border-zinc-300 dark:border-zinc-800 dark:text-zinc-400",
+                  ? "bg-[var(--brand)] text-white shadow-sm"
+                  : "border border-zinc-200 text-zinc-600 hover:border-zinc-300",
               ].join(" ")}
             >
               Custom…
@@ -341,9 +339,9 @@ export function CustomerForm({
         </Field>
 
         {customer?.priceHistory?.length ? (
-          <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-3 text-sm dark:border-zinc-800 dark:bg-zinc-900">
-            <p className="font-semibold text-zinc-900 dark:text-zinc-50">Price history</p>
-            <ul className="mt-2 space-y-1 text-zinc-600 dark:text-zinc-400">
+          <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-3 text-sm">
+            <p className="font-semibold text-zinc-900">Price history</p>
+            <ul className="mt-2 space-y-1 text-zinc-600">
               {customer.priceHistory.map((h) => (
                 <li key={h.changedAt}>
                   {formatDisplayDate(h.effectiveDate)}: £{(h.pricePence / 100).toFixed(2)}
@@ -361,7 +359,7 @@ export function CustomerForm({
             onChange={(e) => setState((s) => ({ ...s, notes: e.target.value }))}
             rows={3}
             placeholder="e.g. Side gate code 4321, friendly dog in the garden"
-            className="min-h-[88px] w-full resize-y rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-base shadow-sm outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-100 dark:border-zinc-800 dark:bg-zinc-950 dark:focus:border-violet-700 dark:focus:ring-violet-900/40"
+            className="min-h-[88px] w-full resize-y rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-base shadow-sm outline-none transition focus:border-[var(--brand)] focus:ring-2 focus:ring-[var(--brand-tint)]"
           />
         </Field>
 
@@ -374,24 +372,24 @@ export function CustomerForm({
       </FormSection>
 
       {error ? (
-        <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 dark:border-red-900/50 dark:bg-red-500/10 dark:text-red-300">
+        <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
           {error}
         </p>
       ) : null}
 
       {savedAt ? (
-        <p className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800 dark:border-emerald-900/50 dark:bg-emerald-500/10 dark:text-emerald-300">
+        <p className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">
           Saved to the database.
         </p>
       ) : null}
 
-      <div className="fixed inset-x-0 bottom-16 z-30 border-t border-zinc-200 bg-white/95 px-4 py-3 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/95">
+      <div className="fixed inset-x-0 bottom-16 z-30 border-t border-zinc-200 bg-white/95 px-4 py-3 backdrop-blur">
         <div className="mx-auto flex w-full max-w-lg items-center gap-2">
           <button
             type="button"
             onClick={() => void onSave()}
             disabled={pending}
-            className="h-12 flex-1 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 text-base font-semibold text-white shadow-md shadow-indigo-600/30 transition active:scale-[0.99] disabled:opacity-40"
+            className="h-12 flex-1 rounded-full bg-[var(--brand)] text-base font-semibold text-white shadow-md transition hover:bg-[var(--brand-dark)] active:scale-[0.99] disabled:opacity-40"
           >
             {pending ? "Saving…" : mode === "new" ? "Add client" : "Save changes"}
           </button>
@@ -403,10 +401,10 @@ export function CustomerForm({
               onBlur={() => setConfirmDelete(false)}
               disabled={pending}
               className={[
-                "h-12 shrink-0 rounded-xl border px-4 text-sm font-semibold transition disabled:opacity-40",
+                "h-12 shrink-0 rounded-full border px-4 text-sm font-semibold transition disabled:opacity-40",
                 confirmDelete
                   ? "border-red-600 bg-red-600 text-white"
-                  : "border-red-200 text-red-700 hover:bg-red-50 dark:border-red-900/60 dark:text-red-300 dark:hover:bg-red-500/10",
+                  : "border-red-200 text-red-700 hover:bg-red-50",
               ].join(" ")}
             >
               {confirmDelete ? "Confirm delete?" : "Delete"}
@@ -428,14 +426,12 @@ function FormSection({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-3xl border border-zinc-200/80 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
+    <div className="rounded-3xl border border-zinc-200 bg-white p-4 shadow-sm">
       <div className="mb-3">
-        <h2 className="text-sm font-bold uppercase tracking-wide text-violet-700 dark:text-violet-300">
+        <h2 className="text-sm font-bold uppercase tracking-wide text-[var(--brand-dark)]">
           {title}
         </h2>
-        {subtitle ? (
-          <p className="mt-0.5 text-sm text-zinc-500 dark:text-zinc-400">{subtitle}</p>
-        ) : null}
+        {subtitle ? <p className="mt-0.5 text-sm text-zinc-500">{subtitle}</p> : null}
       </div>
       <div className="grid gap-3">{children}</div>
     </div>
@@ -445,7 +441,7 @@ function FormSection({
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="grid gap-1">
-      <span className="text-sm font-medium text-zinc-900 dark:text-zinc-50">{label}</span>
+      <span className="text-sm font-medium text-zinc-900">{label}</span>
       {children}
     </label>
   );
@@ -466,18 +462,18 @@ function ToggleField({
     <button
       type="button"
       onClick={() => onChange(!checked)}
-      className="flex items-center justify-between gap-3 rounded-xl border border-zinc-200 px-3 py-3 text-left transition hover:border-zinc-300 dark:border-zinc-800 dark:hover:border-zinc-700"
+      className="flex items-center justify-between gap-3 rounded-xl border border-zinc-200 px-3 py-3 text-left transition hover:border-zinc-300"
     >
       <span>
-        <span className="block text-sm font-semibold text-zinc-900 dark:text-zinc-50">{label}</span>
+        <span className="block text-sm font-semibold text-zinc-900">{label}</span>
         {description ? (
-          <span className="mt-0.5 block text-xs text-zinc-500 dark:text-zinc-400">{description}</span>
+          <span className="mt-0.5 block text-xs text-zinc-500">{description}</span>
         ) : null}
       </span>
       <span
         className={[
           "relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition",
-          checked ? "bg-gradient-to-br from-violet-600 to-indigo-600" : "bg-zinc-200 dark:bg-zinc-800",
+          checked ? "bg-[var(--brand)]" : "bg-zinc-200",
         ].join(" ")}
       >
         <span

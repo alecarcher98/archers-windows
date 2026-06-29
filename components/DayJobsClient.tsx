@@ -210,27 +210,25 @@ export function DayJobsClient({
     <div className="flex flex-col gap-3">
       <Toast message={toast} />
       {error ? (
-        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-300">
+        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
           {error}
         </div>
       ) : null}
 
       <AddOneOffCard disabled={saving !== null} onAdd={addOneOff} />
 
-      <div className="rounded-2xl border border-zinc-200 bg-white p-3 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
+      <div className="rounded-3xl border border-zinc-200 bg-white p-3 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
-            Jobs
-          </p>
+          <p className="text-sm font-semibold text-zinc-900">Jobs</p>
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => setShowRemainingOnly((v) => !v)}
               className={[
-                "h-10 rounded-xl px-3 text-sm font-semibold shadow-sm",
+                "h-10 rounded-full px-3 text-sm font-semibold shadow-sm",
                 showRemainingOnly
-                  ? "bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
-                  : "border border-zinc-200 bg-white text-zinc-900 hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-50 dark:hover:bg-zinc-900",
+                  ? "bg-zinc-900 text-white hover:bg-zinc-800"
+                  : "border border-zinc-200 bg-white text-zinc-900 hover:bg-zinc-50",
               ].join(" ")}
             >
               {showRemainingOnly ? "Showing remaining" : "Show remaining"}
@@ -239,10 +237,10 @@ export function DayJobsClient({
               type="button"
               onClick={() => setGroupByStreet((v) => !v)}
               className={[
-                "h-10 rounded-xl px-3 text-sm font-semibold shadow-sm",
+                "h-10 rounded-full px-3 text-sm font-semibold shadow-sm",
                 groupByStreet
-                  ? "bg-zinc-900 text-white dark:bg-zinc-50 dark:text-zinc-900"
-                  : "border border-zinc-200 bg-white text-zinc-900 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-50",
+                  ? "bg-zinc-900 text-white"
+                  : "border border-zinc-200 bg-white text-zinc-900",
               ].join(" ")}
             >
               {groupByStreet ? "By street" : "Flat list"}
@@ -251,17 +249,17 @@ export function DayJobsClient({
               type="button"
               onClick={() => setReorderMode((v) => !v)}
               className={[
-                "h-10 rounded-xl px-3 text-sm font-semibold shadow-sm",
+                "h-10 rounded-full px-3 text-sm font-semibold shadow-sm",
                 reorderMode
-                  ? "bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
-                  : "border border-zinc-200 bg-white text-zinc-900 hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-50 dark:hover:bg-zinc-900",
+                  ? "bg-zinc-900 text-white hover:bg-zinc-800"
+                  : "border border-zinc-200 bg-white text-zinc-900 hover:bg-zinc-50",
               ].join(" ")}
             >
               {reorderMode ? "Done" : "Reorder"}
             </button>
           </div>
         </div>
-        <p className="mt-1 text-xs text-zinc-600 dark:text-zinc-400">
+        <p className="mt-1 text-xs text-zinc-600">
           Tap <span className="font-semibold">Done</span> when finished, or use Cleaned / Collected
           separately. “More” for notes and moving.
         </p>
@@ -272,11 +270,11 @@ export function DayJobsClient({
           <div key={group.key || "all"}>
             {group.label && groupByStreet && !reorderMode ? (
               <div className="mb-2 flex items-center justify-between gap-2">
-                <p className="text-sm font-bold text-zinc-800 dark:text-zinc-200">{group.label}</p>
+                <p className="text-sm font-bold text-zinc-800">{group.label}</p>
                 <button
                   type="button"
                   onClick={() => void markStreetDone(group.label)}
-                  className="h-9 rounded-lg bg-emerald-600 px-3 text-xs font-semibold text-white"
+                  className="h-9 rounded-full bg-zinc-900 px-3 text-xs font-semibold text-white"
                 >
                   Mark street done
                 </button>
@@ -299,10 +297,8 @@ export function DayJobsClient({
               setDragId(null);
             }}
             className={[
-              "rounded-2xl border bg-white p-4 shadow-sm dark:bg-zinc-950",
-              j.skipped
-                ? "border-amber-300 opacity-60 dark:border-amber-800"
-                : "border-zinc-200 dark:border-zinc-800",
+              "rounded-3xl border bg-white p-4 shadow-sm",
+              j.skipped ? "border-zinc-300 opacity-60" : "border-zinc-200",
               compactMode ? "p-3" : "",
             ].join(" ")}
           >
@@ -310,37 +306,37 @@ export function DayJobsClient({
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className={["truncate font-semibold text-zinc-900 dark:text-zinc-50", compactMode ? "text-lg" : "text-base"].join(" ")}>
+                    <p className={["truncate font-semibold text-zinc-900", compactMode ? "text-lg" : "text-base"].join(" ")}>
                       {j.title}
                     </p>
                     {j.isFirstVisit ? (
-                      <span className="rounded-full bg-violet-100 px-2 py-0.5 text-xs font-semibold text-violet-800 dark:bg-violet-950 dark:text-violet-200">
+                      <span className="rounded-full bg-[var(--brand-tint)] px-2 py-0.5 text-xs font-semibold text-[var(--brand-dark)]">
                         First visit
                       </span>
                     ) : null}
                     {j.skipped ? (
-                      <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-900">
+                      <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-semibold text-zinc-500">
                         Not home
                       </span>
                     ) : null}
                   </div>
-                  <p className="mt-0.5 line-clamp-2 text-sm text-zinc-600 dark:text-zinc-400">
-                    {j.subtitle}
-                  </p>
-                  {j.customerNotes ? (
-                    <p className="mt-1 text-sm font-medium text-violet-800 dark:text-violet-200">
-                      {j.customerNotes}
-                    </p>
-                  ) : null}
+                  <p className="mt-0.5 line-clamp-2 text-sm text-zinc-600">{j.subtitle}</p>
                 </div>
                 {!compactMode ? (
                   <div className="shrink-0 text-right">
-                    <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+                    <p className="text-sm font-semibold text-zinc-900">
                       {formatMoneyPounds(j.pricePence)}
                     </p>
                   </div>
                 ) : null}
               </div>
+
+              {j.customerNotes ? (
+                <div className="mt-2 rounded-xl border border-amber-200 bg-amber-50 p-2.5">
+                  <p className="text-xs font-semibold text-amber-800">Note</p>
+                  <p className="mt-0.5 text-sm text-amber-900">{j.customerNotes}</p>
+                </div>
+              ) : null}
 
               <button
                 type="button"
@@ -353,11 +349,11 @@ export function DayJobsClient({
                   });
                 }}
                 className={[
-                  "mt-3 w-full rounded-xl font-semibold shadow-sm",
+                  "mt-3 w-full rounded-full font-semibold shadow-sm",
                   compactMode ? "h-14 text-lg" : "h-12 text-base",
                   j.cleaned && j.collected
-                    ? "bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-900"
-                    : "bg-emerald-600 text-white hover:bg-emerald-500 dark:bg-emerald-500",
+                    ? "bg-zinc-900 text-white hover:bg-zinc-800"
+                    : "bg-emerald-600 text-white hover:bg-emerald-500",
                 ].join(" ")}
               >
                 {j.cleaned && j.collected ? "Done ✓" : "Mark done"}
@@ -368,10 +364,10 @@ export function DayJobsClient({
                   type="button"
                   onClick={() => void persistState(j.jobId, { cleaned: !j.cleaned })}
                   className={[
-                    "h-10 rounded-xl text-sm font-semibold shadow-sm",
+                    "h-10 rounded-full text-sm font-semibold shadow-sm",
                     j.cleaned
-                      ? "bg-emerald-600/15 text-emerald-800 ring-1 ring-emerald-600/30 dark:text-emerald-200"
-                      : "border border-zinc-200 bg-white text-zinc-700 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-300",
+                      ? "bg-emerald-600/15 text-emerald-800 ring-1 ring-emerald-600/30"
+                      : "border border-zinc-200 bg-white text-zinc-700",
                   ].join(" ")}
                 >
                   Cleaned
@@ -380,10 +376,10 @@ export function DayJobsClient({
                   type="button"
                   onClick={() => void persistState(j.jobId, { collected: !j.collected })}
                   className={[
-                    "h-10 rounded-xl text-sm font-semibold shadow-sm",
+                    "h-10 rounded-full text-sm font-semibold shadow-sm",
                     j.collected
-                      ? "bg-amber-600/15 text-amber-900 ring-1 ring-amber-600/30 dark:text-amber-200"
-                      : "border border-zinc-200 bg-white text-zinc-700 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-300",
+                      ? "bg-amber-600/15 text-amber-900 ring-1 ring-amber-600/30"
+                      : "border border-zinc-200 bg-white text-zinc-700",
                   ].join(" ")}
                 >
                   Collected
@@ -398,10 +394,10 @@ export function DayJobsClient({
                       type="button"
                       onClick={() => void persistState(j.jobId, { paymentType: pt })}
                       className={[
-                        "h-9 rounded-lg px-3 text-xs font-semibold capitalize",
+                        "h-9 rounded-full px-3 text-xs font-semibold capitalize",
                         j.paymentType === pt
-                          ? "bg-zinc-900 text-white dark:bg-zinc-50 dark:text-zinc-900"
-                          : "border border-zinc-200 bg-white text-zinc-700 dark:border-zinc-800 dark:bg-zinc-950",
+                          ? "bg-zinc-900 text-white"
+                          : "border border-zinc-200 bg-white text-zinc-700",
                       ].join(" ")}
                     >
                       {pt}
@@ -411,9 +407,7 @@ export function DayJobsClient({
               ) : null}
 
               {j.smsSentAt ? (
-                <p className="mt-2 text-xs font-medium text-sky-700 dark:text-sky-300">
-                  Text marked done
-                </p>
+                <p className="mt-2 text-xs font-medium text-sky-700">Text marked done</p>
               ) : null}
 
               <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -421,21 +415,21 @@ export function DayJobsClient({
                   href={mapsHref(j.subtitle)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="h-10 rounded-xl border border-zinc-200 bg-white px-3 text-sm font-semibold text-zinc-900 shadow-sm hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-50"
+                  className="h-10 rounded-full border border-zinc-200 bg-white px-3 text-sm font-semibold text-zinc-900 shadow-sm hover:bg-zinc-50"
                 >
                   Map
                 </a>
                 {j.phone ? (
                   <a
                     href={`tel:${j.phone}`}
-                    className="h-10 rounded-xl border border-zinc-200 bg-white px-3 text-sm font-semibold text-zinc-900 shadow-sm hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-50"
+                    className="h-10 rounded-full border border-zinc-200 bg-white px-3 text-sm font-semibold text-zinc-900 shadow-sm hover:bg-zinc-50"
                   >
                     Call
                   </a>
                 ) : customerEditHref(j.jobId) ? (
                   <Link
                     href={customerEditHref(j.jobId)!}
-                    className="h-10 rounded-xl border border-amber-200 bg-amber-50 px-3 text-sm font-semibold text-amber-900 shadow-sm hover:bg-amber-100 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-100"
+                    className="h-10 rounded-full border border-amber-200 bg-amber-50 px-3 text-sm font-semibold text-amber-900 shadow-sm hover:bg-amber-100"
                   >
                     Add phone
                   </Link>
@@ -444,7 +438,7 @@ export function DayJobsClient({
                 <button
                   type="button"
                   onClick={() => void notHome(j)}
-                  className="h-10 rounded-xl border border-amber-200 bg-amber-50 px-3 text-sm font-semibold text-amber-900"
+                  className="h-10 rounded-full border border-amber-200 bg-amber-50 px-3 text-sm font-semibold text-amber-900"
                 >
                   Not home
                 </button>
@@ -452,7 +446,7 @@ export function DayJobsClient({
                 <button
                   type="button"
                   onClick={() => setOpenMore((m) => ({ ...m, [j.jobId]: !Boolean(m[j.jobId]) }))}
-                  className="h-10 rounded-xl border border-zinc-200 bg-white px-3 text-sm font-semibold text-zinc-900 shadow-sm hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-50 dark:hover:bg-zinc-900"
+                  className="h-10 rounded-full border border-zinc-200 bg-white px-3 text-sm font-semibold text-zinc-900 shadow-sm hover:bg-zinc-50"
                 >
                   {openMore[j.jobId] ? "Less" : "More"}
                 </button>
@@ -469,7 +463,7 @@ export function DayJobsClient({
                         ids[idx] = a;
                         void persistOrder(ids);
                       }}
-                      className="h-10 rounded-xl border border-zinc-200 bg-white px-3 text-sm font-semibold text-zinc-900 shadow-sm hover:bg-zinc-50 disabled:opacity-40 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-50 dark:hover:bg-zinc-900"
+                      className="h-10 rounded-full border border-zinc-200 bg-white px-3 text-sm font-semibold text-zinc-900 shadow-sm hover:bg-zinc-50 disabled:opacity-40"
                       disabled={idx === 0 || saving === "order"}
                     >
                       Up
@@ -484,7 +478,7 @@ export function DayJobsClient({
                         ids[idx] = a;
                         void persistOrder(ids);
                       }}
-                      className="h-10 rounded-xl border border-zinc-200 bg-white px-3 text-sm font-semibold text-zinc-900 shadow-sm hover:bg-zinc-50 disabled:opacity-40 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-50 dark:hover:bg-zinc-900"
+                      className="h-10 rounded-full border border-zinc-200 bg-white px-3 text-sm font-semibold text-zinc-900 shadow-sm hover:bg-zinc-50 disabled:opacity-40"
                       disabled={idx === orderedJobs.length - 1 || saving === "order"}
                     >
                       Down
@@ -494,7 +488,7 @@ export function DayJobsClient({
               </div>
 
               {openMore[j.jobId] ? (
-                <div className="mt-3 rounded-xl border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-800 dark:bg-zinc-900">
+                <div className="mt-3 rounded-2xl border border-zinc-200 bg-zinc-50 p-3">
                   <div className="flex flex-wrap items-center gap-2">
                     <button
                       type="button"
@@ -502,7 +496,7 @@ export function DayJobsClient({
                         setMoveOpenFor((cur) => (cur === j.jobId ? null : j.jobId));
                         setMoveToDate(date);
                       }}
-                      className="h-10 rounded-xl bg-white px-3 text-sm font-semibold text-zinc-900 shadow-sm hover:bg-zinc-50 dark:bg-zinc-950 dark:text-zinc-50 dark:hover:bg-zinc-900"
+                      className="h-10 rounded-full bg-white px-3 text-sm font-semibold text-zinc-900 shadow-sm hover:bg-zinc-50"
                     >
                       Move
                     </button>
@@ -520,7 +514,7 @@ export function DayJobsClient({
                           setSaving(null);
                         }
                       }}
-                      className="h-10 rounded-xl bg-white px-3 text-sm font-semibold text-zinc-900 shadow-sm hover:bg-zinc-50 disabled:opacity-40 dark:bg-zinc-950 dark:text-zinc-50 dark:hover:bg-zinc-900"
+                      className="h-10 rounded-full bg-white px-3 text-sm font-semibold text-zinc-900 shadow-sm hover:bg-zinc-50 disabled:opacity-40"
                       disabled={saving !== null}
                     >
                       Remove from week
@@ -530,7 +524,7 @@ export function DayJobsClient({
                       <button
                         type="button"
                         onClick={() => void deleteOneOff(j.jobId)}
-                        className="h-10 rounded-xl border border-red-200 bg-white px-3 text-sm font-semibold text-red-700 shadow-sm hover:bg-red-50 dark:border-red-900/50 dark:bg-zinc-950 dark:text-red-300 dark:hover:bg-red-950/30"
+                        className="h-10 rounded-full border border-red-200 bg-white px-3 text-sm font-semibold text-red-700 shadow-sm hover:bg-red-50"
                         disabled={saving !== null}
                       >
                         Delete one-off
@@ -539,9 +533,7 @@ export function DayJobsClient({
                   </div>
 
                   <label className="mt-3 block">
-                    <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
-                      Note
-                    </span>
+                    <span className="text-sm font-semibold text-zinc-900">Note</span>
                     <textarea
                       defaultValue={j.visitNote}
                       placeholder="Visit note (e.g. dog was loose)…"
@@ -550,15 +542,15 @@ export function DayJobsClient({
                         if (v === j.visitNote) return;
                         void persistState(j.jobId, { visitNote: v });
                       }}
-                      className="mt-1 min-h-[44px] w-full resize-y rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm outline-none focus:border-zinc-400 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-50 dark:focus:border-zinc-600"
+                      className="mt-1 min-h-[44px] w-full resize-y rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm outline-none focus:border-[var(--brand)]"
                     />
                   </label>
                 </div>
               ) : null}
 
               {moveOpenFor === j.jobId ? (
-                <div className="mt-3 rounded-xl border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-800 dark:bg-zinc-900">
-                  <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">Move to</p>
+                <div className="mt-3 rounded-2xl border border-zinc-200 bg-zinc-50 p-3">
+                  <p className="text-sm font-semibold text-zinc-900">Move to</p>
                   <div className="mt-2 grid grid-cols-2 gap-2">
                     <button
                       type="button"
@@ -575,7 +567,7 @@ export function DayJobsClient({
                           setSaving(null);
                         }
                       }}
-                      className="h-10 rounded-xl bg-white text-sm font-semibold text-zinc-900 shadow-sm hover:bg-zinc-50 dark:bg-zinc-950 dark:text-zinc-50 dark:hover:bg-zinc-900"
+                      className="h-10 rounded-full bg-white text-sm font-semibold text-zinc-900 shadow-sm hover:bg-zinc-50"
                       disabled={saving !== null}
                     >
                       Yesterday
@@ -595,7 +587,7 @@ export function DayJobsClient({
                           setSaving(null);
                         }
                       }}
-                      className="h-10 rounded-xl bg-white text-sm font-semibold text-zinc-900 shadow-sm hover:bg-zinc-50 dark:bg-zinc-950 dark:text-zinc-50 dark:hover:bg-zinc-900"
+                      className="h-10 rounded-full bg-white text-sm font-semibold text-zinc-900 shadow-sm hover:bg-zinc-50"
                       disabled={saving !== null}
                     >
                       Tomorrow
@@ -607,7 +599,7 @@ export function DayJobsClient({
                       type="date"
                       value={moveToDate}
                       onChange={(e) => setMoveToDate(e.target.value)}
-                      className="h-10 flex-1 rounded-xl border border-zinc-200 bg-white px-3 text-sm font-semibold text-zinc-900 shadow-sm outline-none focus:border-zinc-400 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-50 dark:focus:border-zinc-600"
+                      className="h-10 flex-1 rounded-xl border border-zinc-200 bg-white px-3 text-sm font-semibold text-zinc-900 shadow-sm outline-none focus:border-[var(--brand)]"
                     />
                     <button
                       type="button"
@@ -637,7 +629,7 @@ export function DayJobsClient({
                           setSaving(null);
                         }
                       }}
-                      className="h-10 rounded-xl bg-zinc-900 px-3 text-sm font-semibold text-white shadow-sm hover:bg-zinc-800 disabled:opacity-40 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
+                      className="h-10 rounded-full bg-zinc-900 px-3 text-sm font-semibold text-white shadow-sm hover:bg-zinc-800 disabled:opacity-40"
                       disabled={saving !== null || !moveToDate}
                     >
                       Move
@@ -645,7 +637,7 @@ export function DayJobsClient({
                   </div>
 
                   {j.kind === "scheduled" && j.street ? (
-                    <p className="mt-2 text-xs text-zinc-600 dark:text-zinc-400">
+                    <p className="mt-2 text-xs text-zinc-600">
                       This will move everyone on <span className="font-semibold">{j.street}</span>{" "}
                       who is on this day (keeps streets aligned).
                     </p>
@@ -655,9 +647,7 @@ export function DayJobsClient({
             </div>
 
             {saving === j.jobId ? (
-              <p className="mt-2 text-xs font-medium text-zinc-500 dark:text-zinc-400">
-                Saving…
-              </p>
+              <p className="mt-2 text-xs font-medium text-zinc-500">Saving…</p>
             ) : null}
           </li>
         ))}
@@ -667,7 +657,7 @@ export function DayJobsClient({
       </div>
 
       {saving === "order" ? (
-        <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Saving order…</p>
+        <p className="text-xs font-medium text-zinc-500">Saving order…</p>
       ) : null}
     </div>
   );
@@ -687,20 +677,16 @@ function AddOneOffCard({
   const [price, setPrice] = useState("");
 
   return (
-    <div className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
+    <div className="rounded-3xl border border-zinc-200 bg-white p-4 shadow-sm">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
-            One-off job
-          </p>
-          <p className="mt-0.5 text-xs text-zinc-600 dark:text-zinc-400">
-            Walk-up customer just for today.
-          </p>
+          <p className="text-sm font-semibold text-zinc-900">One-off job</p>
+          <p className="mt-0.5 text-xs text-zinc-600">Walk-up customer just for today.</p>
         </div>
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
-          className="h-10 rounded-xl bg-zinc-900 px-4 text-sm font-semibold text-white shadow-sm hover:bg-zinc-800 disabled:opacity-40 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
+          className="h-10 rounded-full bg-zinc-900 px-4 text-sm font-semibold text-white shadow-sm hover:bg-zinc-800 disabled:opacity-40"
           disabled={disabled}
         >
           {open ? "Close" : "Add"}
@@ -710,46 +696,38 @@ function AddOneOffCard({
       {open ? (
         <div className="mt-4 grid gap-3">
           <label className="grid gap-1">
-            <span className="text-sm font-medium text-zinc-900 dark:text-zinc-50">
-              Name
-            </span>
+            <span className="text-sm font-medium text-zinc-900">Name</span>
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="h-12 rounded-xl border border-zinc-200 bg-white px-3 text-base text-zinc-900 shadow-sm outline-none focus:border-zinc-400 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-50 dark:focus:border-zinc-600"
+              className="h-12 rounded-xl border border-zinc-200 bg-white px-3 text-base text-zinc-900 shadow-sm outline-none focus:border-[var(--brand)]"
             />
           </label>
           <label className="grid gap-1">
-            <span className="text-sm font-medium text-zinc-900 dark:text-zinc-50">
-              Address
-            </span>
+            <span className="text-sm font-medium text-zinc-900">Address</span>
             <input
               value={address}
               onChange={(e) => setAddress(e.target.value)}
-              className="h-12 rounded-xl border border-zinc-200 bg-white px-3 text-base text-zinc-900 shadow-sm outline-none focus:border-zinc-400 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-50 dark:focus:border-zinc-600"
+              className="h-12 rounded-xl border border-zinc-200 bg-white px-3 text-base text-zinc-900 shadow-sm outline-none focus:border-[var(--brand)]"
             />
           </label>
           <div className="grid grid-cols-2 gap-3">
             <label className="grid gap-1">
-              <span className="text-sm font-medium text-zinc-900 dark:text-zinc-50">
-                Phone
-              </span>
+              <span className="text-sm font-medium text-zinc-900">Phone</span>
               <input
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 inputMode="tel"
-                className="h-12 rounded-xl border border-zinc-200 bg-white px-3 text-base text-zinc-900 shadow-sm outline-none focus:border-zinc-400 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-50 dark:focus:border-zinc-600"
+                className="h-12 rounded-xl border border-zinc-200 bg-white px-3 text-base text-zinc-900 shadow-sm outline-none focus:border-[var(--brand)]"
               />
             </label>
             <label className="grid gap-1">
-              <span className="text-sm font-medium text-zinc-900 dark:text-zinc-50">
-                Price (£)
-              </span>
+              <span className="text-sm font-medium text-zinc-900">Price (£)</span>
               <input
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
                 inputMode="decimal"
-                className="h-12 rounded-xl border border-zinc-200 bg-white px-3 text-base text-zinc-900 shadow-sm outline-none focus:border-zinc-400 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-50 dark:focus:border-zinc-600"
+                className="h-12 rounded-xl border border-zinc-200 bg-white px-3 text-base text-zinc-900 shadow-sm outline-none focus:border-[var(--brand)]"
               />
             </label>
           </div>
@@ -769,7 +747,7 @@ function AddOneOffCard({
               setPrice("");
             }}
             disabled={disabled}
-            className="h-12 rounded-xl bg-emerald-600 text-base font-semibold text-white shadow-sm hover:bg-emerald-500 disabled:opacity-40 dark:bg-emerald-500 dark:hover:bg-emerald-400"
+            className="h-12 rounded-full bg-[var(--brand)] text-base font-semibold text-white shadow-sm hover:bg-[var(--brand-dark)] disabled:opacity-40"
           >
             Save one-off
           </button>

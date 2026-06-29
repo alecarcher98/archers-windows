@@ -89,9 +89,3 @@ export async function verifySessionCookieValue(value: string | undefined | null)
   }
 }
 
-export function checkCredentials(username: string, password: string) {
-  const expectedUser = requireEnv("APP_USERNAME");
-  const expectedPass = requireEnv("APP_PASSWORD");
-  return username === expectedUser && password === expectedPass;
-}
-

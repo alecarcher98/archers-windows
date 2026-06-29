@@ -28,9 +28,7 @@ function Segment({
       onClick={onClick}
       className={[
         "h-10 flex-1 rounded-lg text-sm font-semibold",
-        active
-          ? "bg-white text-zinc-900 shadow-sm dark:bg-zinc-950 dark:text-zinc-50"
-          : "text-zinc-600 dark:text-zinc-300",
+        active ? "bg-white text-[var(--brand-dark)] shadow-sm" : "text-zinc-600",
       ].join(" ")}
     >
       {children}
@@ -73,7 +71,7 @@ export function ScheduleTabsClient({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="grid grid-cols-3 rounded-xl border border-zinc-200 bg-zinc-50 p-1 dark:border-zinc-800 dark:bg-zinc-900">
+      <div className="grid grid-cols-3 rounded-xl border border-zinc-200 bg-zinc-50 p-1">
         <Segment active={tab === "day"} onClick={() => setTab("day")}>
           Day
         </Segment>

@@ -83,7 +83,10 @@ localhost alike), and the private scheduler moved to `/archers`.
   - `ARCHERS_WINDOWS_LIVE_URL` — defaults to the internal `/archers` link.
     Not currently linked from any public marketing page (the real round is
     private), but kept here in case it's wired in elsewhere later.
-  - `DEMO_VIDEO_EMBED_URL` — a YouTube/Loom embed URL for the 60-second demo.
-  - `CONTACT_WHATSAPP_NUMBER` / `CONTACT_EMAIL` — contact details shown in
-    the footer and final call-to-action. The WhatsApp number is already
-    set; update `CONTACT_EMAIL` if needed.
+  - `CONTACT_WHATSAPP_NUMBER` — the only contact method shown in the footer
+    and final call-to-action (no email support exists, by design).
+- **`/demo`** is a live, interactive sandbox (`components/demo/`), not a
+  video — a fake business ("Cleaning Co") seeded with fake customers and
+  jobs entirely client-side (`lib/demoSeed.ts`). Visitors can mark jobs
+  done, chase a payment and add a customer; nothing is persisted or sent
+  anywhere, and a page refresh resets it back to the seed data.

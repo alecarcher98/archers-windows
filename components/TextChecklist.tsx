@@ -140,10 +140,10 @@ export function TextChecklist({
   if (!completed.length) return null;
 
   return (
-    <div className="rounded-2xl border border-sky-200 bg-sky-50 shadow-sm dark:border-sky-900/50 dark:bg-sky-950/30">
-      <div className="border-b border-sky-200/80 px-4 py-3 dark:border-sky-900/50">
-        <p className="text-sm font-semibold text-sky-950 dark:text-sky-100">Texts to send</p>
-        <p className="mt-1 text-sm text-sky-900/80 dark:text-sky-200/80">
+    <div className="rounded-3xl border border-zinc-200 bg-white shadow-sm">
+      <div className="border-b border-zinc-200 px-4 py-3">
+        <p className="text-sm font-semibold text-zinc-900">Texts to send</p>
+        <p className="mt-1 text-sm text-zinc-600">
           {toText.length
             ? `${toText.length} to do · ${texted.length} done`
             : `All ${texted.length} marked as texted.`}{" "}
@@ -152,13 +152,13 @@ export function TextChecklist({
       </div>
 
       <div className="px-4 py-3">
-        <p className="text-xs font-semibold uppercase tracking-wide text-sky-800/80 dark:text-sky-300/80">
+        <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
           Message template
         </p>
-        <pre className="mt-2 whitespace-pre-wrap rounded-xl border border-sky-200/80 bg-white p-3 text-sm text-zinc-800 dark:border-sky-800 dark:bg-zinc-950 dark:text-zinc-200">
+        <pre className="mt-2 whitespace-pre-wrap rounded-xl border border-zinc-200 bg-zinc-50 p-3 text-sm text-zinc-800">
           {sampleMessage}
         </pre>
-        <p className="mt-2 text-xs text-sky-900/70 dark:text-sky-200/70">
+        <p className="mt-2 text-xs text-zinc-500">
           Edit in{" "}
           <Link href="/settings" className="font-semibold underline">
             Settings
@@ -175,14 +175,14 @@ export function TextChecklist({
             <button
               type="button"
               onClick={() => void copyAllMessages()}
-              className="h-10 rounded-xl bg-sky-700 px-3 text-sm font-semibold text-white"
+              className="h-10 rounded-full bg-[var(--brand)] px-3 text-sm font-semibold text-white hover:bg-[var(--brand-dark)]"
             >
               {copiedId === "all" ? "Copied all" : "Copy all messages"}
             </button>
             <button
               type="button"
               onClick={() => void copyAllPhones()}
-              className="h-10 rounded-xl border border-sky-400 bg-white px-3 text-sm font-semibold text-sky-900"
+              className="h-10 rounded-full border border-zinc-200 bg-white px-3 text-sm font-semibold text-zinc-900"
             >
               {copiedId === "phones" ? "Copied" : "Copy phone list"}
             </button>
@@ -190,12 +190,10 @@ export function TextChecklist({
         ) : null}
       </div>
 
-      {error ? (
-        <p className="px-4 pb-2 text-sm font-medium text-red-700 dark:text-red-300">{error}</p>
-      ) : null}
+      {error ? <p className="px-4 pb-2 text-sm font-medium text-red-700">{error}</p> : null}
 
       {toText.length ? (
-        <ul className="divide-y divide-sky-200/80 dark:divide-sky-900/50">
+        <ul className="divide-y divide-zinc-200">
           {toText.map((j) => (
             <TextRow
               key={j.jobId}
@@ -210,11 +208,11 @@ export function TextChecklist({
       ) : null}
 
       {texted.length ? (
-        <div className={toText.length ? "border-t border-sky-200/80 dark:border-sky-900/50" : ""}>
-          <p className="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-sky-800/70 dark:text-sky-300/70">
+        <div className={toText.length ? "border-t border-zinc-200" : ""}>
+          <p className="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
             Texted
           </p>
-          <ul className="divide-y divide-sky-200/80 dark:divide-sky-900/50">
+          <ul className="divide-y divide-zinc-200">
             {texted.map((j) => (
               <TextRow
                 key={j.jobId}
@@ -266,9 +264,9 @@ function TextRow({
         aria-label={`Mark ${job.title} as texted`}
       />
       <div className="min-w-0 flex-1">
-        <p className="font-semibold text-zinc-900 dark:text-zinc-50">{job.title}</p>
-        <p className="mt-0.5 text-sm text-zinc-600 dark:text-zinc-400">{job.subtitle}</p>
-        <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300">
+        <p className="font-semibold text-zinc-900">{job.title}</p>
+        <p className="mt-0.5 text-sm text-zinc-600">{job.subtitle}</p>
+        <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-zinc-700">
           {job.phone ? (
             <>
               <span>{job.phone}</span>
@@ -282,7 +280,7 @@ function TextRow({
               </a>
             </>
           ) : (
-            <span className="text-amber-700 dark:text-amber-300">No phone</span>
+            <span className="text-amber-700">No phone</span>
           )}
           <span className="font-medium">{pounds}</span>
         </div>
@@ -291,7 +289,7 @@ function TextRow({
         type="button"
         onClick={onCopy}
         disabled={pending}
-        className="h-10 shrink-0 self-center rounded-xl border border-sky-300 bg-white px-3 text-sm font-semibold text-sky-900 shadow-sm hover:bg-sky-50 disabled:opacity-40 dark:border-sky-700 dark:bg-zinc-950 dark:text-sky-100"
+        className="h-10 shrink-0 self-center rounded-full border border-zinc-200 bg-white px-3 text-sm font-semibold text-zinc-900 shadow-sm hover:bg-zinc-50 disabled:opacity-40"
       >
         {copied ? "Copied" : "Copy"}
       </button>

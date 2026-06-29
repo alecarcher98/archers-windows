@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { CONTACT_EMAIL, mailtoLink, whatsAppLink } from "@/lib/marketingConfig";
+import { whatsAppLink } from "@/lib/marketingConfig";
 
 export function MarketingFooter() {
   return (
@@ -22,9 +22,6 @@ export function MarketingFooter() {
               className="text-zinc-700 hover:text-zinc-900"
             >
               WhatsApp
-            </a>
-            <a href={mailtoLink("RoundMate enquiry")} className="text-zinc-700 hover:text-zinc-900">
-              {CONTACT_EMAIL}
             </a>
           </div>
         </div>

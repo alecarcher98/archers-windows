@@ -8,15 +8,12 @@ const links = [
 
 export function ScheduleMorePanel() {
   return (
-    <ul className="divide-y divide-zinc-200 overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm dark:divide-zinc-800 dark:border-zinc-800 dark:bg-zinc-950">
+    <ul className="divide-y divide-zinc-200 overflow-hidden rounded-3xl border border-zinc-200 bg-white shadow-sm">
       {links.map((l) => (
         <li key={l.href}>
-          <Link
-            href={l.href}
-            className="block px-4 py-4 hover:bg-zinc-50 dark:hover:bg-zinc-900"
-          >
-            <p className="text-base font-semibold text-zinc-900 dark:text-zinc-50">{l.label}</p>
-            <p className="mt-0.5 text-sm text-zinc-600 dark:text-zinc-400">{l.desc}</p>
+          <Link href={l.href} className="block px-4 py-4 hover:bg-zinc-50">
+            <p className="text-base font-semibold text-zinc-900">{l.label}</p>
+            <p className="mt-0.5 text-sm text-zinc-600">{l.desc}</p>
           </Link>
         </li>
       ))}

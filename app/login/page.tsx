@@ -48,52 +48,46 @@ function LoginInner() {
   }
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-lg flex-col items-stretch justify-center px-4 py-10">
-      <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-        <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
+    <main className="mx-auto flex min-h-dvh w-full max-w-lg flex-col items-stretch justify-center bg-zinc-50 px-4 py-10">
+      <div className="rounded-3xl border border-zinc-200 bg-white p-7 shadow-sm">
+        <p className="inline-flex items-center rounded-full bg-[var(--brand-tint)] px-3 py-1 text-sm font-semibold text-[var(--brand-dark)]">
           Archers Windows
-        </h1>
-        <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-          Sign in to view today’s jobs.
         </p>
+        <h1 className="mt-4 text-2xl font-extrabold tracking-tight text-zinc-900">
+          Sign in to your round.
+        </h1>
+        <p className="mt-2 text-sm text-zinc-600">View today&rsquo;s jobs, who&rsquo;s due, and who&rsquo;s paid.</p>
 
         <form className="mt-6 flex flex-col gap-3" onSubmit={onSubmit}>
           <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-zinc-900 dark:text-zinc-50">
-              Username
-            </span>
+            <span className="text-sm font-medium text-zinc-900">Username</span>
             <input
               name="username"
               autoComplete="username"
-              className="h-12 rounded-xl border border-zinc-200 bg-white px-3 text-base text-zinc-900 shadow-sm outline-none ring-0 focus:border-zinc-400 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-50 dark:focus:border-zinc-600"
+              className="h-12 rounded-xl border border-zinc-200 bg-white px-3 text-base text-zinc-900 shadow-sm outline-none focus:border-[var(--brand)]"
             />
           </label>
           <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-zinc-900 dark:text-zinc-50">
-              Password
-            </span>
+            <span className="text-sm font-medium text-zinc-900">Password</span>
             <input
               name="password"
               type="password"
               autoComplete="current-password"
-              className="h-12 rounded-xl border border-zinc-200 bg-white px-3 text-base text-zinc-900 shadow-sm outline-none ring-0 focus:border-zinc-400 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-50 dark:focus:border-zinc-600"
+              className="h-12 rounded-xl border border-zinc-200 bg-white px-3 text-base text-zinc-900 shadow-sm outline-none focus:border-[var(--brand)]"
             />
           </label>
           <button
             type="submit"
             disabled={pending}
-            className="mt-2 h-12 rounded-xl bg-zinc-900 text-base font-semibold text-white shadow-sm hover:bg-zinc-800 active:bg-zinc-950 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200 dark:active:bg-white"
+            className="mt-2 h-12 rounded-full bg-[var(--brand)] text-base font-semibold text-white shadow-md transition hover:bg-[var(--brand-dark)] disabled:opacity-60"
           >
             {pending ? "Signing in…" : "Sign in"}
           </button>
           {error ? (
-            <p className="mt-1 text-sm font-medium text-red-600 dark:text-red-500">
-              {error}
-            </p>
+            <p className="mt-1 text-sm font-medium text-red-600">{error}</p>
           ) : null}
         </form>
       </div>
     </main>
   );
 }
-

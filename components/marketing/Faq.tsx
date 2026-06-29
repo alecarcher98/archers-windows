@@ -1,4 +1,4 @@
-import { CONTACT_EMAIL, STRIPE_PAYMENT_LINK_URL, mailtoLink, whatsAppLink } from "@/lib/marketingConfig";
+import { STRIPE_PAYMENT_LINK_URL, whatsAppLink } from "@/lib/marketingConfig";
 import { RevealOnScroll } from "./RevealOnScroll";
 
 const FAQS = [
@@ -12,7 +12,7 @@ const FAQS = [
   },
   {
     q: "What if I want to change something after setup?",
-    a: "Message me on WhatsApp or email and I'll update it. Most changes take minutes.",
+    a: "Message me on WhatsApp and I'll update it. Most changes take minutes.",
   },
   {
     q: "Is this only for window cleaning?",
@@ -65,12 +65,6 @@ export function Faq() {
                 WhatsApp me
               </a>
             </div>
-            <a
-              href={mailtoLink("RoundMate enquiry")}
-              className="mt-4 inline-block text-sm text-zinc-400 hover:text-zinc-200"
-            >
-              Or email {CONTACT_EMAIL}
-            </a>
           </div>
         </RevealOnScroll>
       </div>
