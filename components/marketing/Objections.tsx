@@ -11,7 +11,7 @@ const OBJECTIONS = [
   },
   {
     q: "I'm already on Squeegee or Cleaner Planner.",
-    a: "Fair enough — they do a lot. Get Round Mate does less on purpose: just the round, who's due, who's paid. If that's all you need, it's simpler and cheaper.",
+    a: "Fair enough — they do a lot. RoundMate does less on purpose: just the round, who's due, who's paid. If that's all you need, it's simpler and cheaper.",
   },
   {
     q: "What about my data?",

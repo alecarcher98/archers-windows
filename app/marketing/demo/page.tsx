@@ -7,7 +7,7 @@ import {
 import { RevealOnScroll } from "@/components/marketing/RevealOnScroll";
 
 export const metadata: Metadata = {
-  title: "See Get Round Mate live — demo",
+  title: "See RoundMate live — demo",
   description: "Watch the 60-second demo and try the real, live Archer's Windows round.",
 };
 

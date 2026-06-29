@@ -1,3 +1,4 @@
+import Image from "next/image";
 import {
   ARCHERS_WINDOWS_LIVE_URL,
   CONTACT_EMAIL,
@@ -11,8 +12,11 @@ export function MarketingFooter() {
       <div className="mx-auto max-w-5xl">
         <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <p className="text-lg font-bold text-zinc-900">Get Round Mate</p>
-            <p className="mt-1 max-w-sm text-sm text-zinc-600">
+            <div className="flex items-center gap-2">
+              <Image src="/marketing/mark.png" alt="" width={28} height={28} className="h-7 w-7" />
+              <p className="text-lg font-bold text-zinc-900">RoundMate</p>
+            </div>
+            <p className="mt-2 max-w-sm text-sm text-zinc-600">
               Built by a window cleaner&rsquo;s kid, for window cleaners. Your round, on your
               phone — nothing you don&rsquo;t need.
             </p>
@@ -27,19 +31,19 @@ export function MarketingFooter() {
               See the real round live →
             </a>
             <a
-              href={whatsAppLink("Hi — I'd like to find out about Get Round Mate")}
+              href={whatsAppLink("Hi — I'd like to find out about RoundMate")}
               className="text-zinc-700 hover:text-zinc-900"
             >
               WhatsApp
             </a>
-            <a href={mailtoLink("Get Round Mate enquiry")} className="text-zinc-700 hover:text-zinc-900">
+            <a href={mailtoLink("RoundMate enquiry")} className="text-zinc-700 hover:text-zinc-900">
               {CONTACT_EMAIL}
             </a>
           </div>
         </div>
         <p className="mt-8 text-xs text-zinc-500">
-          Your data is yours — exportable any time, never sold. © {new Date().getFullYear()} Get
-          Round Mate.
+          Your data is yours — exportable any time, never sold. © {new Date().getFullYear()}{" "}
+          RoundMate.
         </p>
       </div>
     </footer>

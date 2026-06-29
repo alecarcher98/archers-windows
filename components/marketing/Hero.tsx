@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { STRIPE_PAYMENT_LINK_URL } from "@/lib/marketingConfig";
 import { RevealOnScroll } from "./RevealOnScroll";
@@ -7,14 +8,25 @@ export function Hero() {
     <section className="px-4 pt-12 pb-16 sm:px-6 sm:pt-20">
       <div className="mx-auto max-w-3xl text-center">
         <RevealOnScroll>
-          <p className="inline-flex items-center rounded-full bg-[var(--brand-tint)] px-3 py-1 text-sm font-semibold text-[var(--brand-dark)]">
+          <Image
+            src="/marketing/logo.png"
+            alt="RoundMate — your round, simplified"
+            width={820}
+            height={210}
+            priority
+            unoptimized
+            className="mx-auto h-auto w-full max-w-sm sm:max-w-md"
+          />
+        </RevealOnScroll>
+        <RevealOnScroll delay={40}>
+          <p className="mt-6 inline-flex items-center rounded-full bg-[var(--brand-tint)] px-3 py-1 text-sm font-semibold text-[var(--brand-dark)]">
             Built for real rounds, not boardrooms
           </p>
         </RevealOnScroll>
         <RevealOnScroll delay={80}>
           <h1 className="mt-5 text-3xl font-extrabold tracking-tight text-zinc-900 sm:text-5xl">
-            I built this for my mum and dad&rsquo;s window-cleaning round.
-            <span className="block text-[var(--brand)]">Now I&rsquo;ll set yours up the same way.</span>
+            Run your round from one app, not a stack of spreadsheets.
+            <span className="block text-[var(--brand)]">I&rsquo;ll set it up for you — live in 24 hours.</span>
           </h1>
         </RevealOnScroll>
         <RevealOnScroll delay={160}>
