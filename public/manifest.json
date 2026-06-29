@@ -1,6 +1,6 @@
 {
-  "name": "Archers Windows",
-  "short_name": "Archers",
+  "name": "RoundMate",
+  "short_name": "RoundMate",
   "description": "Window cleaning job scheduler",
   "start_url": "/schedule",
   "display": "standalone",

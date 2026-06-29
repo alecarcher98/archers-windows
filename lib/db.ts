@@ -29,6 +29,7 @@ async function ensureMigrations() {
   await sql`alter table customers add column if not exists notes text`;
   await sql`alter table customers add column if not exists paused_until date`;
   await sql`alter table customers add column if not exists price_history jsonb default '[]'::jsonb`;
+  await sql`alter table customers add column if not exists one_off boolean not null default false`;
 }
 
 export async function ensureSchema() {

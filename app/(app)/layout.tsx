@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { BottomNav } from "@/components/BottomNav";
 
 export const metadata: Metadata = {
-  title: "Archers Windows",
+  title: "RoundMate",
 };
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {

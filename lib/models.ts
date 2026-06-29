@@ -15,6 +15,8 @@ export type Customer = {
   defaultPricePence: number;
   startDate: IsoDate;
   frequencyWeeks: number;
+  /** Cleaned once on startDate only, ignoring frequencyWeeks */
+  oneOff?: boolean;
   active: boolean;
   /** Permanent notes (gate codes, dogs, etc.) */
   notes?: string;
@@ -53,7 +55,7 @@ export type AppSettings = {
 };
 
 export const DEFAULT_APP_SETTINGS: AppSettings = {
-  businessName: "Archers Windows",
+  businessName: "RoundMate",
   smsTemplate: `Good {{greeting}},
 Your windows have been cleaned on {{todayDate}} for the value of {{houseValue}}
 Thanks,

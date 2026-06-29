@@ -90,7 +90,7 @@ export function DemoCustomersView() {
                   {formatMoneyPounds(c.defaultPricePence)}
                 </span>
                 <span className="inline-flex items-center rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-semibold text-zinc-600">
-                  Every {c.frequencyWeeks}w
+                  {c.oneOff ? "One-off" : `Every ${c.frequencyWeeks}w`}
                 </span>
                 {c.pausedUntil ? (
                   <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-800">
@@ -98,6 +98,11 @@ export function DemoCustomersView() {
                   </span>
                 ) : null}
               </div>
+              {c.notes ? (
+                <p className="mt-2 line-clamp-1 rounded-lg bg-amber-50 px-2 py-1 text-xs font-medium text-amber-800">
+                  Note: {c.notes}
+                </p>
+              ) : null}
             </div>
           </li>
         ))}
@@ -118,16 +123,20 @@ function AddDemoCustomerCard({
   const [address, setAddress] = useState("");
   const [street, setStreet] = useState("");
   const [phone, setPhone] = useState("");
+  const [notes, setNotes] = useState("");
   const [price, setPrice] = useState("18.00");
   const [frequencyWeeks, setFrequencyWeeks] = useState(4);
+  const [oneOff, setOneOff] = useState(false);
 
   function reset() {
     setName("");
     setAddress("");
     setStreet("");
     setPhone("");
+    setNotes("");
     setPrice("18.00");
     setFrequencyWeeks(4);
+    setOneOff(false);
   }
 
   return (
@@ -203,10 +212,13 @@ function AddDemoCustomerCard({
                   <button
                     key={n}
                     type="button"
-                    onClick={() => setFrequencyWeeks(n)}
+                    onClick={() => {
+                      setFrequencyWeeks(n);
+                      setOneOff(false);
+                    }}
                     className={[
                       "h-12 flex-1 rounded-xl text-sm font-semibold",
-                      frequencyWeeks === n
+                      !oneOff && frequencyWeeks === n
                         ? "bg-[var(--brand)] text-white"
                         : "border border-zinc-200 text-zinc-600",
                     ].join(" ")}
@@ -214,9 +226,30 @@ function AddDemoCustomerCard({
                     {n}w
                   </button>
                 ))}
+                <button
+                  type="button"
+                  onClick={() => setOneOff(true)}
+                  className={[
+                    "h-12 flex-1 rounded-xl text-sm font-semibold",
+                    oneOff ? "bg-zinc-900 text-white" : "border border-zinc-200 text-zinc-600",
+                  ].join(" ")}
+                >
+                  One-off
+                </button>
               </div>
             </label>
           </div>
+
+          <label className="grid gap-1">
+            <span className="text-sm font-medium text-zinc-900">Notes (e.g. gate code)</span>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={2}
+              placeholder="e.g. Gate code is 1234"
+              className="min-h-[44px] w-full resize-y rounded-xl border border-zinc-200 bg-white px-3 py-2 text-base text-zinc-900 shadow-sm outline-none focus:border-[var(--brand)]"
+            />
+          </label>
 
           <button
             type="button"
@@ -229,8 +262,10 @@ function AddDemoCustomerCard({
                 address: address.trim(),
                 street: street.trim(),
                 phone: phone.trim(),
+                notes: notes.trim(),
                 pricePence,
-                frequencyWeeks,
+                frequencyWeeks: oneOff ? 1 : frequencyWeeks,
+                oneOff,
               });
               reset();
               onOpenChange(false);

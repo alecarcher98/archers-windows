@@ -51,6 +51,7 @@ function mapCustomerRow(row: CustomerRow): Customer {
     defaultPricePence: row.defaultPricePence,
     startDate: row.startDate,
     frequencyWeeks: row.frequencyWeeks,
+    oneOff: Boolean(row.oneOff),
     active: row.active,
     notes: row.notes ?? undefined,
     pausedUntil: (row.pausedUntil as IsoDate | null) ?? undefined,
@@ -104,6 +105,7 @@ export async function getCustomersByIds(ids: string[]): Promise<Customer[]> {
         default_price_pence as "defaultPricePence",
         to_char(start_date, 'YYYY-MM-DD') as "startDate",
         frequency_weeks as "frequencyWeeks",
+        one_off as "oneOff",
         active,
         notes,
         to_char(paused_until, 'YYYY-MM-DD') as "pausedUntil",
@@ -132,6 +134,7 @@ export async function getCustomer(id: string): Promise<Customer | null> {
         default_price_pence as "defaultPricePence",
         to_char(start_date, 'YYYY-MM-DD') as "startDate",
         frequency_weeks as "frequencyWeeks",
+        one_off as "oneOff",
         active,
         notes,
         to_char(paused_until, 'YYYY-MM-DD') as "pausedUntil",
@@ -155,7 +158,7 @@ export async function putCustomer(customer: Customer) {
     await sql`
       insert into customers (
         id, name, address, street, phone,
-        default_price_pence, start_date, frequency_weeks, active,
+        default_price_pence, start_date, frequency_weeks, one_off, active,
         notes, paused_until, price_history
       ) values (
         ${customer.id}::uuid,
@@ -166,6 +169,7 @@ export async function putCustomer(customer: Customer) {
         ${customer.defaultPricePence},
         ${customer.startDate}::date,
         ${customer.frequencyWeeks},
+        ${customer.oneOff ?? false},
         ${customer.active},
         ${customer.notes ?? null},
         ${customer.pausedUntil ?? null}::date,
@@ -179,6 +183,7 @@ export async function putCustomer(customer: Customer) {
         default_price_pence = excluded.default_price_pence,
         start_date = excluded.start_date,
         frequency_weeks = excluded.frequency_weeks,
+        one_off = excluded.one_off,
         active = excluded.active,
         notes = excluded.notes,
         paused_until = excluded.paused_until,

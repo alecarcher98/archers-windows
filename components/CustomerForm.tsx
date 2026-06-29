@@ -18,6 +18,7 @@ type CustomerInput = {
   startDate: string;
   frequencyWeeks: number | "custom";
   customFrequencyWeeks: string;
+  oneOff: boolean;
   active: boolean;
 };
 
@@ -98,6 +99,7 @@ export function CustomerForm({
       startDate: customer?.startDate ?? "",
       frequencyWeeks: isPreset ? (freq as number) : "custom",
       customFrequencyWeeks: isPreset ? "" : String(freq),
+      oneOff: customer?.oneOff ?? false,
       active: customer?.active ?? true,
     };
   }, [customer]);
@@ -155,6 +157,7 @@ export function CustomerForm({
         defaultPricePence,
         startDate: state.startDate as IsoDate,
         frequencyWeeks: Math.round(freq),
+        oneOff: state.oneOff,
         active: state.active,
         priceHistory: customer?.priceHistory,
       };
@@ -291,10 +294,10 @@ export function CustomerForm({
               <button
                 key={n}
                 type="button"
-                onClick={() => setState((s) => ({ ...s, frequencyWeeks: n }))}
+                onClick={() => setState((s) => ({ ...s, frequencyWeeks: n, oneOff: false }))}
                 className={[
                   "h-10 rounded-full px-4 text-sm font-semibold transition",
-                  state.frequencyWeeks === n
+                  !state.oneOff && state.frequencyWeeks === n
                     ? "bg-[var(--brand)] text-white shadow-sm"
                     : "border border-zinc-200 text-zinc-600 hover:border-zinc-300",
                 ].join(" ")}
@@ -304,20 +307,37 @@ export function CustomerForm({
             ))}
             <button
               type="button"
-              onClick={() => setState((s) => ({ ...s, frequencyWeeks: "custom" }))}
+              onClick={() => setState((s) => ({ ...s, frequencyWeeks: "custom", oneOff: false }))}
               className={[
                 "h-10 rounded-full px-4 text-sm font-semibold transition",
-                state.frequencyWeeks === "custom"
+                !state.oneOff && state.frequencyWeeks === "custom"
                   ? "bg-[var(--brand)] text-white shadow-sm"
                   : "border border-zinc-200 text-zinc-600 hover:border-zinc-300",
               ].join(" ")}
             >
               Custom…
             </button>
+            <button
+              type="button"
+              onClick={() => setState((s) => ({ ...s, oneOff: true, frequencyWeeks: 1 }))}
+              className={[
+                "h-10 rounded-full px-4 text-sm font-semibold transition",
+                state.oneOff
+                  ? "bg-zinc-900 text-white shadow-sm"
+                  : "border border-zinc-200 text-zinc-600 hover:border-zinc-300",
+              ].join(" ")}
+            >
+              One-off
+            </button>
           </div>
+          {state.oneOff ? (
+            <p className="mt-2 text-sm text-zinc-500">
+              Cleaned once on the start date below, then it&rsquo;s done — won&rsquo;t repeat.
+            </p>
+          ) : null}
         </Field>
 
-        {state.frequencyWeeks === "custom" ? (
+        {state.frequencyWeeks === "custom" && !state.oneOff ? (
           <Field label="Custom frequency (weeks)">
             <input
               value={state.customFrequencyWeeks}

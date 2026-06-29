@@ -81,6 +81,7 @@ export function dueCustomersOnDate(customers: Customer[], date: IsoDate) {
   return customers.filter((c) => {
     if (!c.active) return false;
     if (isCustomerPausedOnDate(c, date)) return false;
+    if (c.oneOff) return c.startDate === date;
     const diffDays = daysBetween(c.startDate, date);
     if (diffDays < 0) return false;
     const periodDays = 7 * c.frequencyWeeks;

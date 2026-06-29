@@ -35,6 +35,7 @@ export function parseCustomerBody(
     body.frequencyWeeks === undefined
       ? existing?.frequencyWeeks
       : Number(body.frequencyWeeks);
+  const oneOff = typeof body.oneOff === "boolean" ? body.oneOff : (existing?.oneOff ?? false);
   const active = typeof body.active === "boolean" ? body.active : (existing?.active ?? true);
   const notes = typeof body.notes === "string" ? body.notes.trim() : existing?.notes ?? "";
   let pausedUntil: IsoDate | undefined = existing?.pausedUntil;
@@ -67,6 +68,7 @@ export function parseCustomerBody(
     defaultPricePence: Math.round(defaultPricePence),
     startDate: startDate as IsoDate,
     frequencyWeeks: Math.round(frequencyWeeks),
+    oneOff,
     active,
     notes: notes.length ? notes : undefined,
     pausedUntil: pausedUntil as IsoDate | undefined,

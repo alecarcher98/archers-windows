@@ -224,7 +224,7 @@ export function CustomersClient({ customers }: { customers: Customer[] }) {
                       {formatMoneyPounds(c.defaultPricePence)}
                     </span>
                     <span className="inline-flex items-center rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-semibold text-zinc-600">
-                      Every {c.frequencyWeeks}w
+                      {c.oneOff ? "One-off" : `Every ${c.frequencyWeeks}w`}
                     </span>
                     {c.pausedUntil ? (
                       <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-800">
@@ -232,6 +232,12 @@ export function CustomersClient({ customers }: { customers: Customer[] }) {
                       </span>
                     ) : null}
                   </div>
+
+                  {c.notes ? (
+                    <p className="mt-2 line-clamp-1 rounded-lg bg-amber-50 px-2 py-1 text-xs font-medium text-amber-800">
+                      Note: {c.notes}
+                    </p>
+                  ) : null}
                 </div>
 
                 <ChevronRightIcon className="mt-3 h-5 w-5 shrink-0 text-zinc-300 transition group-hover:translate-x-0.5 group-hover:text-[var(--brand)]" />

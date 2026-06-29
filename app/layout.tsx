@@ -14,10 +14,10 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Archers Windows",
+  title: "RoundMate",
   description: "Mobile scheduler and job book replacement",
   manifest: "/manifest.json",
-  appleWebApp: { capable: true, title: "Archers Windows" },
+  appleWebApp: { capable: true, title: "RoundMate" },
 };
 
 export const viewport: Viewport = {

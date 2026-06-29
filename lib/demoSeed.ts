@@ -25,6 +25,7 @@ type SeedCustomer = {
   dueOffsetDays?: number;
   active?: boolean;
   pausedInDays?: number;
+  oneOff?: boolean;
 };
 
 const SEED: SeedCustomer[] = [
@@ -99,7 +100,8 @@ const SEED: SeedCustomer[] = [
     street: "Elm Street",
     phone: "07700 111228",
     pricePence: 1500,
-    frequencyWeeks: 8,
+    frequencyWeeks: 1,
+    oneOff: true,
   },
   {
     id: "demo-9",
@@ -153,7 +155,7 @@ export function createDemoCustomers(today: IsoDate): Customer[] {
   return SEED.map((s) => {
     const periodDays = 7 * s.frequencyWeeks;
     const offset = s.dueOffsetDays ?? 0;
-    const startDate = addDays(today, -periodDays + offset);
+    const startDate = s.oneOff ? today : addDays(today, -periodDays + offset);
     return {
       id: s.id,
       name: s.name,
@@ -163,6 +165,7 @@ export function createDemoCustomers(today: IsoDate): Customer[] {
       defaultPricePence: s.pricePence,
       startDate,
       frequencyWeeks: s.frequencyWeeks,
+      oneOff: s.oneOff,
       active: s.active ?? true,
       notes: s.notes,
       pausedUntil: s.pausedInDays ? addDays(today, s.pausedInDays) : undefined,

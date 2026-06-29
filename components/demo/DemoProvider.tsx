@@ -13,6 +13,8 @@ export type NewDemoCustomer = {
   phone: string;
   pricePence: number;
   frequencyWeeks: number;
+  oneOff: boolean;
+  notes: string;
 };
 
 type DemoContextValue = {
@@ -98,7 +100,9 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
         defaultPricePence: input.pricePence,
         startDate: today,
         frequencyWeeks: input.frequencyWeeks,
+        oneOff: input.oneOff,
         active: true,
+        notes: input.notes || undefined,
       };
       // No need to touch orderedJobIds — assembleDayJobs sorts any job not
       // already in the order by street then name, which places this sensibly.

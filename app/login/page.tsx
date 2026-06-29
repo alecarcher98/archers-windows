@@ -51,7 +51,7 @@ function LoginInner() {
     <main className="mx-auto flex min-h-dvh w-full max-w-lg flex-col items-stretch justify-center bg-zinc-50 px-4 py-10">
       <div className="rounded-3xl border border-zinc-200 bg-white p-7 shadow-sm">
         <p className="inline-flex items-center rounded-full bg-[var(--brand-tint)] px-3 py-1 text-sm font-semibold text-[var(--brand-dark)]">
-          Archers Windows
+          RoundMate
         </p>
         <h1 className="mt-4 text-2xl font-extrabold tracking-tight text-zinc-900">
           Sign in to your round.

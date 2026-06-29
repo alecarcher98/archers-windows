@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { CUSTOMER_CSV_HEADER } from "@/lib/customerUtils";
+import { CUSTOMER_CSV_HEADER, LEGACY_CUSTOMER_CSV_HEADER } from "@/lib/customerUtils";
 import { getCustomersByIds, listCustomerIds, putCustomer } from "@/lib/kv";
 import { isIsoDate, type Customer } from "@/lib/models";
 
@@ -11,7 +11,7 @@ export async function POST(req: Request) {
   }
 
   const header = lines[0].trim();
-  if (header !== CUSTOMER_CSV_HEADER) {
+  if (header !== CUSTOMER_CSV_HEADER && header !== LEGACY_CUSTOMER_CSV_HEADER) {
     return NextResponse.json(
       { ok: false, error: `Expected header: ${CUSTOMER_CSV_HEADER}` },
       { status: 400 },
@@ -39,6 +39,7 @@ export async function POST(req: Request) {
       active,
       notes,
       pausedUntil,
+      oneOff,
     ] = cols;
 
     if (!name?.trim() || !address?.trim()) {
@@ -67,6 +68,7 @@ export async function POST(req: Request) {
       defaultPricePence,
       startDate,
       frequencyWeeks: Math.round(freq),
+      oneOff: oneOff === "1" || oneOff?.toLowerCase() === "true",
       active: active === "1" || active?.toLowerCase() === "true",
       notes: notes?.trim() || undefined,
       pausedUntil: pausedUntil && isIsoDate(pausedUntil) ? pausedUntil : undefined,
