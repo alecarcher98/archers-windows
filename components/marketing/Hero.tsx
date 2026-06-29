@@ -25,8 +25,8 @@ export function Hero() {
         </RevealOnScroll>
         <RevealOnScroll delay={80}>
           <h1 className="mt-5 text-3xl font-extrabold tracking-tight text-zinc-900 sm:text-5xl">
-            I built this for my mum and dad&rsquo;s window-cleaning round.
-            <span className="block text-[var(--brand)]">Now I&rsquo;ll set yours up the same way.</span>
+            Run your round from one app, not a stack of spreadsheets.
+            <span className="block text-[var(--brand)]">I&rsquo;ll set it up for you — live in 24 hours.</span>
           </h1>
         </RevealOnScroll>
         <RevealOnScroll delay={160}>

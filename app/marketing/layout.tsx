@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   ),
   title: "RoundMate — done-for-you round management for window cleaners",
   description:
-    "I built this for my mum and dad's window-cleaning round. Send me your customer list and I'll set yours up the same way — who's due, who's paid, gate codes and skipped cleans, all on your phone.",
+    "Done-for-you round management for window cleaners. Send your customer list and I'll have your round — who's due, who's paid, gate codes and skipped cleans — running on your phone within 24 hours.",
   manifest: "/marketing/manifest.json",
   appleWebApp: { capable: true, title: "RoundMate" },
   openGraph: {
