@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { authCookieName, createSessionCookieValue } from "@/lib/auth";
 import { verifyCredentials } from "@/lib/credentials";
+import { getCurrentCompanyId } from "@/lib/tenant";
 
 export async function POST(req: Request) {
   let username = "";
@@ -20,7 +21,8 @@ export async function POST(req: Request) {
     password = String(form.get("password") ?? "");
   }
 
-  if (!(await verifyCredentials(username, password))) {
+  const companyId = await getCurrentCompanyId();
+  if (!(await verifyCredentials(companyId, username, password))) {
     return NextResponse.json({ ok: false, error: "Invalid login" }, { status: 401 });
   }
 

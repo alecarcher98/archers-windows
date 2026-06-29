@@ -1,6 +1,7 @@
 import type { Customer, DayRecord, IsoDate, PriceHistoryEntry } from "@/lib/models";
 import { localKv } from "@/lib/localKv";
 import { ensureSchema, isPostgresEnabled } from "@/lib/db";
+import { getCurrentCompanyId } from "@/lib/tenant";
 
 type PgRow<T> = { rows: T[] };
 
@@ -32,9 +33,6 @@ const kv: KvLike = hasRemoteKvEnv()
     (require("@vercel/kv").kv as KvLike)
   : (localKv as unknown as KvLike);
 
-const CUSTOMER_SET_KEY = "customers:all";
-const REMOVED_SET_KEY = "removed:all";
-
 type CustomerRow = Customer & {
   notes?: string | null;
   pausedUntil?: string | null;
@@ -59,14 +57,17 @@ function mapCustomerRow(row: CustomerRow): Customer {
   };
 }
 
+// Every key is namespaced by tenant — required for the local KV/JSON fallback
+// to keep the same per-company isolation guarantee Postgres gets from
+// `where company_id = ...` on every query below.
 export const keys = {
-  customer: (id: string) => `customer:${id}`,
-  day: (date: IsoDate) => `day:${date}`,
-  customersAll: () => CUSTOMER_SET_KEY,
-  move: (jobId: string) => `move:${jobId}`,
-  movesTo: (date: IsoDate) => `moves:to:${date}`,
-  removed: (jobId: string) => `removed:${jobId}`,
-  removedAll: () => REMOVED_SET_KEY,
+  customer: (companyId: string, id: string) => `customer:${companyId}:${id}`,
+  day: (companyId: string, date: IsoDate) => `day:${companyId}:${date}`,
+  customersAll: (companyId: string) => `customers:all:${companyId}`,
+  move: (companyId: string, jobId: string) => `move:${companyId}:${jobId}`,
+  movesTo: (companyId: string, date: IsoDate) => `moves:to:${companyId}:${date}`,
+  removed: (companyId: string, jobId: string) => `removed:${companyId}:${jobId}`,
+  removedAll: (companyId: string) => `removed:all:${companyId}`,
 } as const;
 
 export type MoveRecord = { jobId: string; fromDate: IsoDate; toDate: IsoDate; movedAt: number };
@@ -78,20 +79,24 @@ export type RemovedRecord = {
 };
 
 export async function listCustomerIds(): Promise<string[]> {
+  const companyId = await getCurrentCompanyId();
   if (isPostgresEnabled()) {
     await ensureSchema();
     const sql = await pg();
-    const res = (await sql`select id::text as id from customers order by name asc`) as PgRow<{
-      id: string;
-    }>;
+    const res = (await sql`
+      select id::text as id from customers
+      where company_id = ${companyId}::uuid
+      order by name asc
+    `) as PgRow<{ id: string }>;
     return res.rows.map((r) => r.id);
   }
-  const ids = (await kv.smembers(keys.customersAll())) as string[];
+  const ids = (await kv.smembers(keys.customersAll(companyId))) as string[];
   return ids.sort();
 }
 
 export async function getCustomersByIds(ids: string[]): Promise<Customer[]> {
   if (ids.length === 0) return [];
+  const companyId = await getCurrentCompanyId();
   if (isPostgresEnabled()) {
     await ensureSchema();
     const sql = await pg();
@@ -111,16 +116,17 @@ export async function getCustomersByIds(ids: string[]): Promise<Customer[]> {
         to_char(paused_until, 'YYYY-MM-DD') as "pausedUntil",
         price_history as "priceHistory"
       from customers
-      where id = any(${ids as unknown as never}::uuid[])
+      where company_id = ${companyId}::uuid and id = any(${ids as unknown as never}::uuid[])
     `) as PgRow<CustomerRow>;
     return res.rows.map(mapCustomerRow);
   }
-  const ks = ids.map((id) => keys.customer(id));
+  const ks = ids.map((id) => keys.customer(companyId, id));
   const rows = await kv.mget(...ks);
   return (rows as Array<Customer | null>).filter((c): c is Customer => Boolean(c));
 }
 
 export async function getCustomer(id: string): Promise<Customer | null> {
+  const companyId = await getCurrentCompanyId();
   if (isPostgresEnabled()) {
     await ensureSchema();
     const sql = await pg();
@@ -140,28 +146,30 @@ export async function getCustomer(id: string): Promise<Customer | null> {
         to_char(paused_until, 'YYYY-MM-DD') as "pausedUntil",
         price_history as "priceHistory"
       from customers
-      where id = ${id}::uuid
+      where company_id = ${companyId}::uuid and id = ${id}::uuid
       limit 1
     `) as PgRow<CustomerRow>;
     const row = res.rows[0];
     return row ? mapCustomerRow(row) : null;
   }
-  const c = (await kv.get(keys.customer(id))) as Customer | null;
+  const c = (await kv.get(keys.customer(companyId, id))) as Customer | null;
   return c ?? null;
 }
 
 export async function putCustomer(customer: Customer) {
+  const companyId = await getCurrentCompanyId();
   if (isPostgresEnabled()) {
     await ensureSchema();
     const sql = await pg();
     const historyJson = JSON.stringify(customer.priceHistory ?? []);
     await sql`
       insert into customers (
-        id, name, address, street, phone,
+        id, company_id, name, address, street, phone,
         default_price_pence, start_date, frequency_weeks, one_off, active,
         notes, paused_until, price_history
       ) values (
         ${customer.id}::uuid,
+        ${companyId}::uuid,
         ${customer.name},
         ${customer.address},
         ${customer.street ?? null},
@@ -188,22 +196,24 @@ export async function putCustomer(customer: Customer) {
         notes = excluded.notes,
         paused_until = excluded.paused_until,
         price_history = excluded.price_history
+      where customers.company_id = ${companyId}::uuid
     `;
     return;
   }
-  await kv.set(keys.customer(customer.id), customer);
-  await kv.sadd(keys.customersAll(), customer.id);
+  await kv.set(keys.customer(companyId, customer.id), customer);
+  await kv.sadd(keys.customersAll(companyId), customer.id);
 }
 
 export async function deleteCustomer(id: string) {
+  const companyId = await getCurrentCompanyId();
   if (isPostgresEnabled()) {
     await ensureSchema();
     const sql = await pg();
-    await sql`delete from customers where id = ${id}::uuid`;
+    await sql`delete from customers where company_id = ${companyId}::uuid and id = ${id}::uuid`;
     return;
   }
-  await kv.del(keys.customer(id));
-  await kv.srem(keys.customersAll(), id);
+  await kv.del(keys.customer(companyId, id));
+  await kv.srem(keys.customersAll(companyId), id);
 }
 
 export function emptyDay(date: IsoDate): DayRecord {
@@ -211,13 +221,14 @@ export function emptyDay(date: IsoDate): DayRecord {
 }
 
 export async function getDay(date: IsoDate): Promise<DayRecord> {
+  const companyId = await getCurrentCompanyId();
   if (isPostgresEnabled()) {
     await ensureSchema();
     const sql = await pg();
     const res = (await sql`
       select record
       from days
-      where date = ${date}::date
+      where company_id = ${companyId}::uuid and date = ${date}::date
       limit 1
     `) as PgRow<{ record: unknown }>;
     const row = res.rows[0];
@@ -232,7 +243,7 @@ export async function getDay(date: IsoDate): Promise<DayRecord> {
         typeof d.oneOff === "object" && d.oneOff ? (d.oneOff as DayRecord["oneOff"]) : {},
     };
   }
-  const d = (await kv.get(keys.day(date))) as Partial<DayRecord> | null;
+  const d = (await kv.get(keys.day(companyId, date))) as Partial<DayRecord> | null;
   if (!d) return emptyDay(date);
   return {
     date,
@@ -245,21 +256,28 @@ export async function getDay(date: IsoDate): Promise<DayRecord> {
 }
 
 export async function putDay(record: DayRecord) {
+  const companyId = await getCurrentCompanyId();
   if (isPostgresEnabled()) {
     await ensureSchema();
     const sql = await pg();
     const recordJson = JSON.stringify(record);
+    // NOTE: `days` PK is still just (date) until the Stage 5 migration changes
+    // it to (company_id, date) — this `on conflict (date)` target must be
+    // updated to `on conflict (company_id, date)` at that point. Safe for now
+    // because only one tenant exists; do not ship a second tenant before then.
     await sql`
-      insert into days (date, record)
-      values (${record.date}::date, ${recordJson}::jsonb)
+      insert into days (date, company_id, record)
+      values (${record.date}::date, ${companyId}::uuid, ${recordJson}::jsonb)
       on conflict (date) do update set record = excluded.record
+      where days.company_id = ${companyId}::uuid
     `;
     return;
   }
-  await kv.set(keys.day(record.date), record);
+  await kv.set(keys.day(companyId, record.date), record);
 }
 
 export async function getMove(jobId: string): Promise<MoveRecord | null> {
+  const companyId = await getCurrentCompanyId();
   if (isPostgresEnabled()) {
     await ensureSchema();
     const sql = await pg();
@@ -270,76 +288,84 @@ export async function getMove(jobId: string): Promise<MoveRecord | null> {
         to_char(to_date, 'YYYY-MM-DD') as "toDate",
         moved_at as "movedAt"
       from moves
-      where job_id = ${jobId}
+      where company_id = ${companyId}::uuid and job_id = ${jobId}
       limit 1
     `) as PgRow<MoveRecord>;
     return res.rows[0] ?? null;
   }
-  return ((await kv.get(keys.move(jobId))) as MoveRecord | null) ?? null;
+  return ((await kv.get(keys.move(companyId, jobId))) as MoveRecord | null) ?? null;
 }
 
 export async function listMovesTo(date: IsoDate): Promise<string[]> {
+  const companyId = await getCurrentCompanyId();
   if (isPostgresEnabled()) {
     await ensureSchema();
     const sql = await pg();
     const res = (await sql`
       select job_id as "jobId"
       from moves
-      where to_date = ${date}::date
+      where company_id = ${companyId}::uuid and to_date = ${date}::date
     `) as PgRow<{ jobId: string }>;
     return res.rows.map((r) => r.jobId);
   }
-  return ((await kv.smembers(keys.movesTo(date))) as string[]) ?? [];
+  return ((await kv.smembers(keys.movesTo(companyId, date))) as string[]) ?? [];
 }
 
 export async function setMove(jobId: string, fromDate: IsoDate, toDate: IsoDate) {
+  const companyId = await getCurrentCompanyId();
   if (isPostgresEnabled()) {
     await ensureSchema();
     const sql = await pg();
     await sql`
-      insert into moves (job_id, from_date, to_date, moved_at)
-      values (${jobId}, ${fromDate}::date, ${toDate}::date, ${Date.now()})
+      insert into moves (job_id, company_id, from_date, to_date, moved_at)
+      values (${jobId}, ${companyId}::uuid, ${fromDate}::date, ${toDate}::date, ${Date.now()})
       on conflict (job_id) do update set
         from_date = excluded.from_date,
         to_date = excluded.to_date,
         moved_at = excluded.moved_at
+      where moves.company_id = ${companyId}::uuid
     `;
     return;
   }
   const existing = await getMove(jobId);
   if (existing) {
-    await kv.srem(keys.movesTo(existing.toDate), jobId);
+    await kv.srem(keys.movesTo(companyId, existing.toDate), jobId);
   }
   const rec: MoveRecord = { jobId, fromDate, toDate, movedAt: Date.now() };
-  await kv.set(keys.move(jobId), rec);
-  await kv.sadd(keys.movesTo(toDate), jobId);
+  await kv.set(keys.move(companyId, jobId), rec);
+  await kv.sadd(keys.movesTo(companyId, toDate), jobId);
 }
 
 export async function clearMove(jobId: string) {
+  const companyId = await getCurrentCompanyId();
   if (isPostgresEnabled()) {
     await ensureSchema();
     const sql = await pg();
-    await sql`delete from moves where job_id = ${jobId}`;
+    await sql`delete from moves where company_id = ${companyId}::uuid and job_id = ${jobId}`;
     return;
   }
   const existing = await getMove(jobId);
   if (existing) {
-    await kv.srem(keys.movesTo(existing.toDate), jobId);
+    await kv.srem(keys.movesTo(companyId, existing.toDate), jobId);
   }
-  await kv.del(keys.move(jobId));
+  await kv.del(keys.move(companyId, jobId));
 }
 
 export async function listRemovedJobIds(): Promise<string[]> {
+  const companyId = await getCurrentCompanyId();
   if (isPostgresEnabled()) {
     await ensureSchema();
     const sql = await pg();
-    const res = (await sql`select job_id as "jobId" from removed`) as PgRow<{ jobId: string }>;
+    const res = (await sql`
+      select job_id as "jobId" from removed where company_id = ${companyId}::uuid
+    `) as PgRow<{ jobId: string }>;
     return res.rows.map((r) => r.jobId);
   }
-  return ((await kv.smembers(keys.removedAll())) as string[]) ?? [];
+  return ((await kv.smembers(keys.removedAll(companyId))) as string[]) ?? [];
 }
 
 export async function getRemoved(jobId: string): Promise<RemovedRecord | null> {
+  const companyId = await getCurrentCompanyId();
   if (isPostgresEnabled()) {
     await ensureSchema();
     const sql = await pg();
@@ -350,41 +376,43 @@ export async function getRemoved(jobId: string): Promise<RemovedRecord | null> {
         removed_at as "removedAt",
         note
       from removed
-      where job_id = ${jobId}
+      where company_id = ${companyId}::uuid and job_id = ${jobId}
       limit 1
     `) as PgRow<RemovedRecord>;
     return res.rows[0] ?? null;
   }
-  return ((await kv.get(keys.removed(jobId))) as RemovedRecord | null) ?? null;
+  return ((await kv.get(keys.removed(companyId, jobId))) as RemovedRecord | null) ?? null;
 }
 
 export async function removeFromWeek(jobId: string, dueDate: IsoDate, note?: string) {
+  const companyId = await getCurrentCompanyId();
   if (isPostgresEnabled()) {
     await ensureSchema();
     const sql = await pg();
     await sql`
-      insert into removed (job_id, due_date, removed_at, note)
-      values (${jobId}, ${dueDate}::date, ${Date.now()}, ${note ?? null})
+      insert into removed (job_id, company_id, due_date, removed_at, note)
+      values (${jobId}, ${companyId}::uuid, ${dueDate}::date, ${Date.now()}, ${note ?? null})
       on conflict (job_id) do update set
         due_date = excluded.due_date,
         removed_at = excluded.removed_at,
         note = excluded.note
+      where removed.company_id = ${companyId}::uuid
     `;
     return;
   }
   const rec: RemovedRecord = { jobId, dueDate, removedAt: Date.now(), note };
-  await kv.set(keys.removed(jobId), rec);
-  await kv.sadd(keys.removedAll(), jobId);
+  await kv.set(keys.removed(companyId, jobId), rec);
+  await kv.sadd(keys.removedAll(companyId), jobId);
 }
 
 export async function restoreRemoved(jobId: string) {
+  const companyId = await getCurrentCompanyId();
   if (isPostgresEnabled()) {
     await ensureSchema();
     const sql = await pg();
-    await sql`delete from removed where job_id = ${jobId}`;
+    await sql`delete from removed where company_id = ${companyId}::uuid and job_id = ${jobId}`;
     return;
   }
-  await kv.del(keys.removed(jobId));
-  await kv.srem(keys.removedAll(), jobId);
+  await kv.del(keys.removed(companyId, jobId));
+  await kv.srem(keys.removedAll(companyId), jobId);
 }
-

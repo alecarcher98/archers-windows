@@ -2,8 +2,11 @@ import type { AppSettings } from "@/lib/models";
 import { DEFAULT_APP_SETTINGS } from "@/lib/models";
 import { localKv } from "@/lib/localKv";
 import { ensureSchema, isPostgresEnabled } from "@/lib/db";
+import { getCurrentCompanyId } from "@/lib/tenant";
 
-const SETTINGS_KEY = "app:settings";
+function settingsKey(companyId: string) {
+  return `app:settings:${companyId}`;
+}
 
 type KvLike = {
   get: (key: string) => Promise<unknown>;
@@ -42,22 +45,24 @@ function normalizeSettings(raw: Partial<AppSettings> | null): AppSettings {
 }
 
 export async function getAppSettings(): Promise<AppSettings> {
+  const companyId = await getCurrentCompanyId();
   if (isPostgresEnabled()) {
     await ensureSchema();
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { sql } = require("@vercel/postgres") as typeof import("@vercel/postgres");
     const res = await sql`
-      select value from app_settings where id = 'default' limit 1
+      select value from app_settings where company_id = ${companyId}::uuid and id = 'default' limit 1
     `;
     const row = res.rows[0] as { value: unknown } | undefined;
     if (!row?.value || typeof row.value !== "object") return DEFAULT_APP_SETTINGS;
     return normalizeSettings(row.value as Partial<AppSettings>);
   }
-  const raw = (await kv.get(SETTINGS_KEY)) as Partial<AppSettings> | null;
+  const raw = (await kv.get(settingsKey(companyId))) as Partial<AppSettings> | null;
   return normalizeSettings(raw);
 }
 
 export async function putAppSettings(settings: AppSettings): Promise<AppSettings> {
+  const companyId = await getCurrentCompanyId();
   const next = normalizeSettings({
     ...settings,
     compactMode: settings.compactMode ?? false,
@@ -67,14 +72,18 @@ export async function putAppSettings(settings: AppSettings): Promise<AppSettings
     await ensureSchema();
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { sql } = require("@vercel/postgres") as typeof import("@vercel/postgres");
+    // NOTE: `app_settings` PK is still just (id) until the Stage 5 migration
+    // changes it to (company_id, id) — safe for now because only one tenant
+    // exists; do not ship a second tenant before then.
     await sql`
-      insert into app_settings (id, value)
-      values ('default', ${next as never})
+      insert into app_settings (id, company_id, value)
+      values ('default', ${companyId}::uuid, ${next as never})
       on conflict (id) do update set value = excluded.value
+      where app_settings.company_id = ${companyId}::uuid
     `;
     return next;
   }
 
-  await kv.set(SETTINGS_KEY, next);
+  await kv.set(settingsKey(companyId), next);
   return next;
 }

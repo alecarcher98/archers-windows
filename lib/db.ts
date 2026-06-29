@@ -30,6 +30,24 @@ async function ensureMigrations() {
   await sql`alter table customers add column if not exists paused_until date`;
   await sql`alter table customers add column if not exists price_history jsonb default '[]'::jsonb`;
   await sql`alter table customers add column if not exists one_off boolean not null default false`;
+
+  // --- Multi-tenancy: additive only. Nothing reads company_id yet, so this
+  // is a behavioral no-op until a later migration backfills and tightens it. ---
+  await sql`
+    create table if not exists companies (
+      id uuid primary key,
+      display_name text not null,
+      slug text not null unique,
+      status text not null default 'active',
+      brand_color text null,
+      created_at timestamptz not null default now()
+    );
+  `;
+  await sql`alter table customers add column if not exists company_id uuid references companies(id)`;
+  await sql`alter table moves add column if not exists company_id uuid references companies(id)`;
+  await sql`alter table removed add column if not exists company_id uuid references companies(id)`;
+  await sql`alter table days add column if not exists company_id uuid references companies(id)`;
+  await sql`alter table app_settings add column if not exists company_id uuid references companies(id)`;
 }
 
 export async function ensureSchema() {

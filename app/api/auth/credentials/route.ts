@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 import { getUsername, setCredentials, verifyCredentials } from "@/lib/credentials";
+import { getCurrentCompanyId } from "@/lib/tenant";
 
 export async function GET() {
   try {
-    const username = await getUsername();
+    const companyId = await getCurrentCompanyId();
+    const username = await getUsername(companyId);
     return NextResponse.json({ ok: true, username });
   } catch (e) {
     const message = e instanceof Error ? e.message : "Failed to load login details";
@@ -34,15 +36,16 @@ export async function PATCH(req: Request) {
       );
     }
 
-    const currentUsername = await getUsername();
-    if (!(await verifyCredentials(currentUsername, currentPassword))) {
+    const companyId = await getCurrentCompanyId();
+    const currentUsername = await getUsername(companyId);
+    if (!(await verifyCredentials(companyId, currentUsername, currentPassword))) {
       return NextResponse.json(
         { ok: false, error: "Current password is incorrect" },
         { status: 401 },
       );
     }
 
-    await setCredentials(newUsername, newPassword);
+    await setCredentials(companyId, newUsername, newPassword);
     return NextResponse.json({ ok: true, username: newUsername });
   } catch (e) {
     const message = e instanceof Error ? e.message : "Failed to update login details";

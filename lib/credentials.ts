@@ -1,7 +1,6 @@
 import { localKv } from "@/lib/localKv";
 import { ensureSchema, isPostgresEnabled } from "@/lib/db";
 
-const AUTH_KEY = "app:auth";
 const PBKDF2_ITERATIONS = 100_000;
 const DEFAULT_USERNAME = "archer";
 const DEFAULT_PASSWORD = "archer";
@@ -25,6 +24,13 @@ const kv: KvLike = hasRemoteKvEnv()
   ? // eslint-disable-next-line @typescript-eslint/no-require-imports
     (require("@vercel/kv").kv as KvLike)
   : (localKv as unknown as KvLike);
+
+// Credentials are looked up *before* a session exists (this is what mints
+// one), so — unlike lib/kv.ts / lib/settings.ts — every function here takes
+// an explicit companyId rather than reading it implicitly from the session.
+function authKey(companyId: string) {
+  return `app:auth:${companyId}`;
+}
 
 function bytesToBase64(bytes: Uint8Array) {
   return Buffer.from(bytes).toString("base64");
@@ -67,36 +73,42 @@ function isStoredCredentials(raw: unknown): raw is StoredCredentials {
   );
 }
 
-async function readStoredCredentials(): Promise<StoredCredentials | null> {
+async function readStoredCredentials(companyId: string): Promise<StoredCredentials | null> {
   if (isPostgresEnabled()) {
     await ensureSchema();
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { sql } = require("@vercel/postgres") as typeof import("@vercel/postgres");
-    const res = await sql`select value from app_settings where id = 'auth' limit 1`;
+    const res = await sql`
+      select value from app_settings where company_id = ${companyId}::uuid and id = 'auth' limit 1
+    `;
     const row = res.rows[0] as { value: unknown } | undefined;
     return isStoredCredentials(row?.value) ? row.value : null;
   }
-  const raw = await kv.get(AUTH_KEY);
+  const raw = await kv.get(authKey(companyId));
   return isStoredCredentials(raw) ? raw : null;
 }
 
-async function writeStoredCredentials(creds: StoredCredentials) {
+async function writeStoredCredentials(companyId: string, creds: StoredCredentials) {
   if (isPostgresEnabled()) {
     await ensureSchema();
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { sql } = require("@vercel/postgres") as typeof import("@vercel/postgres");
+    // NOTE: `app_settings` PK is still just (id) until the Stage 5 migration
+    // changes it to (company_id, id) — safe for now because only one tenant
+    // exists; do not ship a second tenant before then.
     await sql`
-      insert into app_settings (id, value)
-      values ('auth', ${creds as never})
+      insert into app_settings (id, company_id, value)
+      values ('auth', ${companyId}::uuid, ${creds as never})
       on conflict (id) do update set value = excluded.value
+      where app_settings.company_id = ${companyId}::uuid
     `;
     return;
   }
-  await kv.set(AUTH_KEY, creds);
+  await kv.set(authKey(companyId), creds);
 }
 
-async function getOrSeedCredentials(): Promise<StoredCredentials> {
-  const existing = await readStoredCredentials();
+async function getOrSeedCredentials(companyId: string): Promise<StoredCredentials> {
+  const existing = await readStoredCredentials(companyId);
   if (existing) return existing;
 
   const { passwordHash, passwordSalt } = await hashWithNewSalt(DEFAULT_PASSWORD);
@@ -105,23 +117,31 @@ async function getOrSeedCredentials(): Promise<StoredCredentials> {
     passwordHash,
     passwordSalt,
   };
-  await writeStoredCredentials(seeded);
+  await writeStoredCredentials(companyId, seeded);
   return seeded;
 }
 
-export async function verifyCredentials(username: string, password: string): Promise<boolean> {
-  const stored = await getOrSeedCredentials();
+export async function verifyCredentials(
+  companyId: string,
+  username: string,
+  password: string,
+): Promise<boolean> {
+  const stored = await getOrSeedCredentials(companyId);
   if (username !== stored.username) return false;
   const candidateHash = await hashPassword(password, base64ToBytes(stored.passwordSalt));
   return candidateHash === stored.passwordHash;
 }
 
-export async function setCredentials(username: string, password: string): Promise<void> {
+export async function setCredentials(
+  companyId: string,
+  username: string,
+  password: string,
+): Promise<void> {
   const { passwordHash, passwordSalt } = await hashWithNewSalt(password);
-  await writeStoredCredentials({ username, passwordHash, passwordSalt });
+  await writeStoredCredentials(companyId, { username, passwordHash, passwordSalt });
 }
 
-export async function getUsername(): Promise<string> {
-  const stored = await getOrSeedCredentials();
+export async function getUsername(companyId: string): Promise<string> {
+  const stored = await getOrSeedCredentials(companyId);
   return stored.username;
 }
