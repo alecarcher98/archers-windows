@@ -19,12 +19,12 @@ export function FounderStory() {
             </div>
 
             <p className="mt-6 text-lg text-zinc-700">
-              Hi, I&rsquo;m Alec. My parents run Archer&rsquo;s Windows — a real window cleaning
+              Hi, I&rsquo;m Alec. My parents run Archer&rsquo;s Windows — a real cleaning
               round. They were running it off a paper book and a memory for who&rsquo;d paid, so
               I built them an app for it.
             </p>
             <p className="mt-3 text-lg text-zinc-700">
-              It worked. So now I set the same thing up for other window cleaners and cleaners — done for you,
+              It worked. So now I set the same thing up for other cleaners — done for you,
               live on your phone in 24 hours.
             </p>
           </div>
