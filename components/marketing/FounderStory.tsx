@@ -24,26 +24,9 @@ export function FounderStory() {
               I built them an app for it.
             </p>
             <p className="mt-3 text-lg text-zinc-700">
-              It worked. So now I set the same thing up for other window cleaners — done for you,
+              It worked. So now I set the same thing up for other window cleaners and cleaners — done for you,
               live on your phone in 24 hours.
             </p>
-
-            <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-4">
-              <p className="text-sm text-amber-900">
-                This isn&rsquo;t a sales mockup — it&rsquo;s the actual business I built it for,
-                running live, free forever for them.
-              </p>
-              <Link
-                href={ARCHERS_WINDOWS_LIVE_URL}
-                className="mt-2 inline-flex items-center text-sm font-semibold text-amber-900 underline"
-              >
-                See the real Archer&rsquo;s Windows login →
-              </Link>
-              <p className="mt-1 text-xs text-amber-800/80">
-                It&rsquo;s their private app, so you&rsquo;ll land on a real login screen, not a
-                public demo — that&rsquo;s the point.
-              </p>
-            </div>
           </div>
         </RevealOnScroll>
       </div>
