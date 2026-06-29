@@ -10,8 +10,8 @@ const OBJECTIONS = [
     a: "Yes. Your existing GoCardless mandates carry over — they do nothing on your end. Your customers keep paying the same way.",
   },
   {
-    q: "I'm already on Squeegee or Cleaner Planner.",
-    a: "Fair enough — they do a lot. RoundMate does less on purpose: just the round, who's due, who's paid. If that's all you need, it's simpler and cheaper.",
+    q: "I'm already using scheduling software for this.",
+    a: "Fair enough — most of it does a lot. RoundMate does less on purpose: just the round, who's due, who's paid. If that's all you need, it's simpler and cheaper.",
   },
   {
     q: "What about my data?",

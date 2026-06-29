@@ -32,7 +32,7 @@ export function Hero() {
         <RevealOnScroll delay={160}>
           <p className="mt-5 text-lg text-zinc-600 sm:text-xl">
             Who&rsquo;s due, who&rsquo;s paid, gate codes, skipped cleans — your whole round on
-            your phone. No spreadsheets, no faff, one login.
+            your phone. No spreadsheets, no hassle, one login.
           </p>
         </RevealOnScroll>
         <RevealOnScroll delay={240}>
