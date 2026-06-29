@@ -15,6 +15,7 @@ function LoginInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const nextPath = useMemo(() => searchParams.get("next") || "/today", [searchParams]);
+  const slug = useMemo(() => searchParams.get("slug") ?? "", [searchParams]);
 
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -32,8 +33,12 @@ function LoginInner() {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ username, password, slug }),
       });
+      if (res.status === 404) {
+        setError("Unknown company link.");
+        return;
+      }
       if (!res.ok) {
         setError("Incorrect username or password.");
         return;

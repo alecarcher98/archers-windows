@@ -78,8 +78,8 @@ export type RemovedRecord = {
   note?: string;
 };
 
-export async function listCustomerIds(): Promise<string[]> {
-  const companyId = await getCurrentCompanyId();
+export async function listCustomerIds(companyIdOverride?: string): Promise<string[]> {
+  const companyId = companyIdOverride ?? (await getCurrentCompanyId());
   if (isPostgresEnabled()) {
     await ensureSchema();
     const sql = await pg();
@@ -94,9 +94,12 @@ export async function listCustomerIds(): Promise<string[]> {
   return ids.sort();
 }
 
-export async function getCustomersByIds(ids: string[]): Promise<Customer[]> {
+export async function getCustomersByIds(
+  ids: string[],
+  companyIdOverride?: string,
+): Promise<Customer[]> {
   if (ids.length === 0) return [];
-  const companyId = await getCurrentCompanyId();
+  const companyId = companyIdOverride ?? (await getCurrentCompanyId());
   if (isPostgresEnabled()) {
     await ensureSchema();
     const sql = await pg();
@@ -125,8 +128,8 @@ export async function getCustomersByIds(ids: string[]): Promise<Customer[]> {
   return (rows as Array<Customer | null>).filter((c): c is Customer => Boolean(c));
 }
 
-export async function getCustomer(id: string): Promise<Customer | null> {
-  const companyId = await getCurrentCompanyId();
+export async function getCustomer(id: string, companyIdOverride?: string): Promise<Customer | null> {
+  const companyId = companyIdOverride ?? (await getCurrentCompanyId());
   if (isPostgresEnabled()) {
     await ensureSchema();
     const sql = await pg();
@@ -156,8 +159,8 @@ export async function getCustomer(id: string): Promise<Customer | null> {
   return c ?? null;
 }
 
-export async function putCustomer(customer: Customer) {
-  const companyId = await getCurrentCompanyId();
+export async function putCustomer(customer: Customer, companyIdOverride?: string) {
+  const companyId = companyIdOverride ?? (await getCurrentCompanyId());
   if (isPostgresEnabled()) {
     await ensureSchema();
     const sql = await pg();
@@ -204,8 +207,8 @@ export async function putCustomer(customer: Customer) {
   await kv.sadd(keys.customersAll(companyId), customer.id);
 }
 
-export async function deleteCustomer(id: string) {
-  const companyId = await getCurrentCompanyId();
+export async function deleteCustomer(id: string, companyIdOverride?: string) {
+  const companyId = companyIdOverride ?? (await getCurrentCompanyId());
   if (isPostgresEnabled()) {
     await ensureSchema();
     const sql = await pg();
@@ -261,15 +264,10 @@ export async function putDay(record: DayRecord) {
     await ensureSchema();
     const sql = await pg();
     const recordJson = JSON.stringify(record);
-    // NOTE: `days` PK is still just (date) until the Stage 5 migration changes
-    // it to (company_id, date) — this `on conflict (date)` target must be
-    // updated to `on conflict (company_id, date)` at that point. Safe for now
-    // because only one tenant exists; do not ship a second tenant before then.
     await sql`
       insert into days (date, company_id, record)
       values (${record.date}::date, ${companyId}::uuid, ${recordJson}::jsonb)
-      on conflict (date) do update set record = excluded.record
-      where days.company_id = ${companyId}::uuid
+      on conflict (company_id, date) do update set record = excluded.record
     `;
     return;
   }

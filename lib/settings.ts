@@ -72,14 +72,10 @@ export async function putAppSettings(settings: AppSettings): Promise<AppSettings
     await ensureSchema();
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { sql } = require("@vercel/postgres") as typeof import("@vercel/postgres");
-    // NOTE: `app_settings` PK is still just (id) until the Stage 5 migration
-    // changes it to (company_id, id) — safe for now because only one tenant
-    // exists; do not ship a second tenant before then.
     await sql`
       insert into app_settings (id, company_id, value)
       values ('default', ${companyId}::uuid, ${next as never})
-      on conflict (id) do update set value = excluded.value
-      where app_settings.company_id = ${companyId}::uuid
+      on conflict (company_id, id) do update set value = excluded.value
     `;
     return next;
   }

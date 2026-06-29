@@ -1,5 +1,14 @@
 const COOKIE_NAME = "aw_session";
-const COOKIE_VERSION = 1;
+const TENANT_COOKIE_NAME = "aw_tenant";
+// Bumped for multi-tenancy: payloads now carry companyId/role, so old v1
+// sessions are cleanly rejected (forces one re-login, not a security hole).
+const COOKIE_VERSION = 2;
+
+// Admin sessions are a fully separate cookie/payload shape from company
+// sessions — gated by ADMIN_SECRET, never carries a companyId, so a bug in
+// one can't be replayed as the other.
+const ADMIN_COOKIE_NAME = "aw_admin_session";
+const ADMIN_COOKIE_VERSION = 1;
 
 function requireEnv(name: string) {
   const v = process.env[name];
@@ -49,25 +58,83 @@ async function hmacSha256Base64Url(secret: string, message: string) {
   return base64UrlEncode(sig);
 }
 
-type SessionPayload = {
+export type SessionRole = "admin" | "company";
+
+export type SessionPayload = {
   v: number;
   iat: number;
+  companyId: string;
+  role: SessionRole;
 };
 
 export function authCookieName() {
   return COOKIE_NAME;
 }
 
-export async function createSessionCookieValue() {
+/** Non-secret "which company did you last sign in to" hint — lets /login
+ * know which tenant to authenticate against even after a session expires,
+ * since inner app pages never carry a slug in their URL. */
+export function tenantCookieName() {
+  return TENANT_COOKIE_NAME;
+}
+
+export async function createSessionCookieValue(companyId: string, role: SessionRole = "company") {
   const secret = requireEnv("AUTH_SECRET");
-  const payload: SessionPayload = { v: COOKIE_VERSION, iat: Date.now() };
+  const payload: SessionPayload = { v: COOKIE_VERSION, iat: Date.now(), companyId, role };
   const payloadJson = JSON.stringify(payload);
   const payloadB64 = base64UrlEncode(new TextEncoder().encode(payloadJson));
   const sig = await hmacSha256Base64Url(secret, payloadB64);
   return `${payloadB64}.${sig}`;
 }
 
-export async function verifySessionCookieValue(value: string | undefined | null) {
+export async function verifySessionCookieValue(
+  value: string | undefined | null,
+): Promise<SessionPayload | null> {
+  if (!value) return null;
+  const secret = process.env.AUTH_SECRET;
+  if (!secret) return null;
+
+  const parts = value.split(".");
+  if (parts.length !== 2) return null;
+  const [payloadB64, sig] = parts;
+
+  const expected = await hmacSha256Base64Url(secret, payloadB64);
+  if (expected !== sig) return null;
+
+  try {
+    const payloadBytes = base64UrlDecodeToBytes(payloadB64);
+    const payloadText = new TextDecoder().decode(payloadBytes);
+    const payload = JSON.parse(payloadText) as Partial<SessionPayload>;
+    if (payload?.v !== COOKIE_VERSION) return null;
+    if (typeof payload.companyId !== "string" || !payload.companyId) return null;
+    if (payload.role !== "admin" && payload.role !== "company") return null;
+    return payload as SessionPayload;
+  } catch {
+    return null;
+  }
+}
+
+type AdminSessionPayload = {
+  v: number;
+  iat: number;
+};
+
+export function adminCookieName() {
+  return ADMIN_COOKIE_NAME;
+}
+
+export async function createAdminSessionCookieValue() {
+  const secret = requireEnv("AUTH_SECRET");
+  const payload: AdminSessionPayload = { v: ADMIN_COOKIE_VERSION, iat: Date.now() };
+  const payloadJson = JSON.stringify(payload);
+  const payloadB64 = base64UrlEncode(new TextEncoder().encode(payloadJson));
+  const sig = await hmacSha256Base64Url(secret, payloadB64);
+  return `${payloadB64}.${sig}`;
+}
+
+export async function verifyAdminSessionCookieValue(
+  value: string | undefined | null,
+): Promise<boolean> {
   if (!value) return false;
   const secret = process.env.AUTH_SECRET;
   if (!secret) return false;
@@ -82,10 +149,16 @@ export async function verifySessionCookieValue(value: string | undefined | null)
   try {
     const payloadBytes = base64UrlDecodeToBytes(payloadB64);
     const payloadText = new TextDecoder().decode(payloadBytes);
-    const payload = JSON.parse(payloadText) as SessionPayload;
-    return payload?.v === COOKIE_VERSION;
+    const payload = JSON.parse(payloadText) as Partial<AdminSessionPayload>;
+    return payload?.v === ADMIN_COOKIE_VERSION;
   } catch {
     return false;
   }
+}
+
+export function verifyAdminSecret(candidate: string): boolean {
+  const secret = process.env.ADMIN_SECRET;
+  if (!secret) return false;
+  return candidate === secret;
 }
 

@@ -1,4 +1,6 @@
+import { cookies } from "next/headers";
 import { ensureSchema, isPostgresEnabled } from "@/lib/db";
+import { authCookieName, verifySessionCookieValue } from "@/lib/auth";
 
 export const LOCAL_DEV_COMPANY_ID = "local-dev";
 const FALLBACK_SLUG = "archers-windows";
@@ -13,10 +15,15 @@ export type Company = {
 let cachedFallbackCompanyId: string | null = null;
 
 /**
- * Temporary scaffolding: until the session carries a companyId, every
- * request resolves to the migrated Archer's Windows tenant. Safe while
- * exactly one tenant exists — replaced once sessions carry identity.
+ * The single-tenant default ("archers-windows") — used when nothing in the
+ * request names a tenant (a bare /login visit with no slug and no tenant
+ * cookie). Deliberately ignores any existing session, so it can't resolve
+ * to whichever company you happened to be logged into before.
  */
+export async function getDefaultCompanyId(): Promise<string> {
+  return getFallbackCompanyId();
+}
+
 async function getFallbackCompanyId(): Promise<string> {
   if (!isPostgresEnabled()) return LOCAL_DEV_COMPANY_ID;
   if (cachedFallbackCompanyId) return cachedFallbackCompanyId;
@@ -30,7 +37,20 @@ async function getFallbackCompanyId(): Promise<string> {
   return id;
 }
 
+/**
+ * The companyId every data-access call is scoped by. Reads it from the
+ * verified session (set at login — see app/api/auth/login/route.ts); falls
+ * back to the migrated Archer's Windows tenant only when there's genuinely
+ * no session to read (e.g. a build-time render with no request context).
+ */
 export async function getCurrentCompanyId(): Promise<string> {
+  try {
+    const cookieStore = await cookies();
+    const session = await verifySessionCookieValue(cookieStore.get(authCookieName())?.value);
+    if (session?.companyId) return session.companyId;
+  } catch {
+    // cookies() throws outside a request context (e.g. some build-time paths) — fall through.
+  }
   return getFallbackCompanyId();
 }
 
