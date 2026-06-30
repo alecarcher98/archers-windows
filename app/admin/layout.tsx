@@ -13,7 +13,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <a href="/admin" className="text-base font-semibold tracking-tight text-zinc-900">
             RoundMate Admin
           </a>
-          <AdminLogoutButton />
+          <div className="flex shrink-0 items-center gap-2">
+            <a
+              href="/admin/maintenance"
+              className="h-9 rounded-full border border-zinc-200 bg-white px-3 text-sm font-semibold text-zinc-700 shadow-sm hover:bg-zinc-50 inline-flex items-center"
+            >
+              Maintenance
+            </a>
+            <AdminLogoutButton />
+          </div>
         </div>
       </header>
       <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-6">{children}</main>

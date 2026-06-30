@@ -27,7 +27,7 @@ export default async function AdminDashboardPage() {
           {companies.map((c) => (
             <li
               key={c.id}
-              className="flex items-center justify-between gap-3 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm"
+              className="flex flex-col gap-3 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between"
             >
               <div className="min-w-0">
                 <p className="truncate text-base font-semibold text-zinc-900">{c.displayName}</p>
@@ -36,18 +36,18 @@ export default async function AdminDashboardPage() {
                   since {c.createdAt}
                 </p>
               </div>
-              <div className="flex shrink-0 items-center gap-2">
+              <div className="grid grid-cols-2 gap-2 sm:flex sm:w-auto sm:shrink-0 sm:items-center">
                 <a
                   href={`/c/${c.slug}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="h-9 rounded-full border border-zinc-200 bg-white px-3 text-sm font-semibold text-zinc-700 shadow-sm hover:bg-zinc-50"
+                  className="h-9 rounded-full border border-zinc-200 bg-white px-3 text-center text-sm font-semibold text-zinc-700 shadow-sm hover:bg-zinc-50 inline-flex items-center justify-center"
                 >
                   Open
                 </a>
                 <Link
                   href={`/admin/companies/${c.id}`}
-                  className="h-9 rounded-full bg-zinc-900 px-3 text-sm font-semibold text-white shadow-sm hover:bg-zinc-800 inline-flex items-center"
+                  className="h-9 rounded-full bg-zinc-900 px-3 text-sm font-semibold text-white shadow-sm hover:bg-zinc-800 inline-flex items-center justify-center"
                 >
                   Manage
                 </Link>
