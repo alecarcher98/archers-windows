@@ -29,11 +29,17 @@ function LoginInner() {
     const username = String(fd.get("username") ?? "");
     const password = String(fd.get("password") ?? "");
 
+    // A flaky connection (or a slow cold start on the server) should surface
+    // as an error the user can retry, not an indefinitely spinning button.
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 12_000);
+
     try {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ username, password, slug }),
+        signal: controller.signal,
       });
       if (res.status === 404) {
         setError("Unknown company link.");
@@ -45,16 +51,21 @@ function LoginInner() {
       }
       router.replace(nextPath);
       router.refresh();
-    } catch {
-      setError("Could not sign in. Try again.");
+    } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") {
+        setError("That's taking too long. Check your connection and try again.");
+      } else {
+        setError("Could not sign in. Try again.");
+      }
     } finally {
+      clearTimeout(timeout);
       setPending(false);
     }
   }
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-lg flex-col items-stretch justify-center bg-zinc-50 px-4 py-10">
-      <div className="rounded-3xl border border-zinc-200 bg-white p-7 shadow-sm">
+      <div className="animate-fade-in-up rounded-3xl border border-zinc-200 bg-white p-7 shadow-sm">
         <p className="inline-flex items-center rounded-full bg-[var(--brand-tint)] px-3 py-1 text-sm font-semibold text-[var(--brand-dark)]">
           RoundMate
         </p>
@@ -69,7 +80,7 @@ function LoginInner() {
             <input
               name="username"
               autoComplete="username"
-              className="h-12 rounded-xl border border-zinc-200 bg-white px-3 text-base text-zinc-900 shadow-sm outline-none focus:border-[var(--brand)]"
+              className="h-12 rounded-xl border border-zinc-200 bg-white px-3 text-base text-zinc-900 shadow-sm outline-none transition focus:border-[var(--brand)]"
             />
           </label>
           <label className="flex flex-col gap-1">
@@ -78,18 +89,24 @@ function LoginInner() {
               name="password"
               type="password"
               autoComplete="current-password"
-              className="h-12 rounded-xl border border-zinc-200 bg-white px-3 text-base text-zinc-900 shadow-sm outline-none focus:border-[var(--brand)]"
+              className="h-12 rounded-xl border border-zinc-200 bg-white px-3 text-base text-zinc-900 shadow-sm outline-none transition focus:border-[var(--brand)]"
             />
           </label>
           <button
             type="submit"
             disabled={pending}
-            className="mt-2 h-12 rounded-full bg-[var(--brand)] text-base font-semibold text-white shadow-md transition hover:bg-[var(--brand-dark)] disabled:opacity-60"
+            className="mt-2 inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[var(--brand)] text-base font-semibold text-white shadow-md transition hover:bg-[var(--brand-dark)] active:scale-[0.99] disabled:opacity-60"
           >
+            {pending ? (
+              <span
+                className="animate-spin-smooth h-4 w-4 rounded-full border-2 border-white/40 border-t-white"
+                aria-hidden
+              />
+            ) : null}
             {pending ? "Signing in…" : "Sign in"}
           </button>
           {error ? (
-            <p className="mt-1 text-sm font-medium text-red-600">{error}</p>
+            <p className="animate-fade-in-up mt-1 text-sm font-medium text-red-600">{error}</p>
           ) : null}
         </form>
       </div>
