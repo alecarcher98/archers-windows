@@ -345,12 +345,12 @@ export function DayJobsClient({
       <div className="rounded-3xl border border-zinc-200 bg-white p-3 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="text-sm font-semibold text-zinc-900">Jobs</p>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
               onClick={() => setShowRemainingOnly((v) => !v)}
               className={[
-                "h-10 rounded-full px-3 text-sm font-semibold shadow-sm",
+                "min-h-10 whitespace-nowrap rounded-full px-3 py-2 text-sm font-semibold shadow-sm",
                 showRemainingOnly
                   ? "bg-zinc-900 text-white hover:bg-zinc-800"
                   : "border border-zinc-200 bg-white text-zinc-900 hover:bg-zinc-50",
@@ -362,7 +362,7 @@ export function DayJobsClient({
               type="button"
               onClick={() => setGroupByStreet((v) => !v)}
               className={[
-                "h-10 rounded-full px-3 text-sm font-semibold shadow-sm",
+                "min-h-10 whitespace-nowrap rounded-full px-3 py-2 text-sm font-semibold shadow-sm",
                 groupByStreet
                   ? "bg-zinc-900 text-white"
                   : "border border-zinc-200 bg-white text-zinc-900",
@@ -374,7 +374,7 @@ export function DayJobsClient({
               type="button"
               onClick={() => setReorderMode((v) => !v)}
               className={[
-                "h-10 rounded-full px-3 text-sm font-semibold shadow-sm",
+                "min-h-10 whitespace-nowrap rounded-full px-3 py-2 text-sm font-semibold shadow-sm",
                 reorderMode
                   ? "bg-zinc-900 text-white hover:bg-zinc-800"
                   : "border border-zinc-200 bg-white text-zinc-900 hover:bg-zinc-50",
