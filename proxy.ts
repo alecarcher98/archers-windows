@@ -19,6 +19,7 @@ const ADMIN_PUBLIC_PATHS = ["/admin/login", "/api/admin/auth/login"];
 const PATH_ALIASES: Record<string, string> = {
   "/": "/marketing",
   "/demo": "/marketing/demo",
+  "/privacy": "/marketing/privacy",
 };
 
 // "/archers" is a permanent legacy alias to the original tenant's slug —

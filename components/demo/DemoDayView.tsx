@@ -1,12 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import type { DayJobVM } from "@/lib/dayJobVm";
 import type { PaymentType } from "@/lib/models";
 import { mapsHref, whatsAppHref } from "@/lib/phoneUtils";
 import { buildCustomerMessage } from "@/lib/messageTemplate";
 import { DEMO_SETTINGS } from "@/lib/demoSeed";
 import { useDemo } from "@/components/demo/DemoProvider";
+import { SwipeableJobRow } from "@/components/SwipeableJobRow";
 
 function formatMoneyPounds(pence: number) {
   return `£${(pence / 100).toFixed(2)}`;
@@ -152,11 +153,27 @@ export function DemoDayView() {
   );
 }
 
-function DemoJobCard({ job: j }: { job: DayJobVM }) {
+const DemoJobCard = memo(function DemoJobCard({ job: j }: { job: DayJobVM }) {
   const { updateJobState } = useDemo();
 
+  const onSwipeRight = useCallback(
+    () => updateJobState(j.jobId, { collected: true, paymentType: j.paymentType ?? "cash" }),
+    [updateJobState, j.jobId, j.paymentType],
+  );
+  const onSwipeLeft = useCallback(
+    () => updateJobState(j.jobId, { skipped: !j.skipped }),
+    [updateJobState, j.jobId, j.skipped],
+  );
+
   return (
-    <li
+    <li>
+    <SwipeableJobRow
+      rightLabel="Paid"
+      leftLabel={j.skipped ? "Unskip" : "Skip"}
+      onSwipeRight={onSwipeRight}
+      onSwipeLeft={onSwipeLeft}
+    >
+    <div
       className={[
         "rounded-3xl border bg-white p-4 shadow-sm",
         j.skipped ? "border-zinc-300 opacity-60" : "border-zinc-200",
@@ -172,7 +189,7 @@ function DemoJobCard({ job: j }: { job: DayJobVM }) {
               </span>
             ) : null}
             {j.skipped ? (
-              <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-semibold text-zinc-500">
+              <span className="rounded-full bg-zinc-200 px-2 py-0.5 text-xs font-semibold text-zinc-700">
                 Not home
               </span>
             ) : null}
@@ -216,7 +233,7 @@ function DemoJobCard({ job: j }: { job: DayJobVM }) {
           type="button"
           onClick={() => updateJobState(j.jobId, { cleaned: !j.cleaned })}
           className={[
-            "h-10 rounded-full text-sm font-semibold shadow-sm",
+            "h-12 rounded-full text-sm font-semibold shadow-sm",
             j.cleaned
               ? "bg-emerald-600/15 text-emerald-800 ring-1 ring-emerald-600/30"
               : "border border-zinc-200 bg-white text-zinc-700",
@@ -228,7 +245,7 @@ function DemoJobCard({ job: j }: { job: DayJobVM }) {
           type="button"
           onClick={() => updateJobState(j.jobId, { collected: !j.collected })}
           className={[
-            "h-10 rounded-full text-sm font-semibold shadow-sm",
+            "h-12 rounded-full text-sm font-semibold shadow-sm",
             j.collected
               ? "bg-amber-600/15 text-amber-900 ring-1 ring-amber-600/30"
               : "border border-zinc-200 bg-white text-zinc-700",
@@ -263,26 +280,34 @@ function DemoJobCard({ job: j }: { job: DayJobVM }) {
           href={mapsHref(j.subtitle)}
           target="_blank"
           rel="noopener noreferrer"
-          className="h-10 rounded-full border border-zinc-200 bg-white px-3 text-sm font-semibold text-zinc-900 shadow-sm hover:bg-zinc-50"
+          className="h-12 inline-flex items-center rounded-full border border-zinc-200 bg-white px-3 text-sm font-semibold text-zinc-900 shadow-sm hover:bg-zinc-50"
         >
           Map
         </a>
         {j.phone ? (
-          <a
-            href={`tel:${j.phone}`}
-            className="h-10 rounded-full border border-zinc-200 bg-white px-3 text-sm font-semibold text-zinc-900 shadow-sm hover:bg-zinc-50"
-          >
-            Call
-          </a>
+          <>
+            <a
+              href={`tel:${j.phone}`}
+              className="h-12 inline-flex items-center rounded-full border border-zinc-200 bg-white px-3 text-sm font-semibold text-zinc-900 shadow-sm hover:bg-zinc-50"
+            >
+              Call
+            </a>
+            <a
+              href={`sms:${j.phone}`}
+              className="h-12 inline-flex items-center rounded-full border border-zinc-200 bg-white px-3 text-sm font-semibold text-zinc-900 shadow-sm hover:bg-zinc-50"
+            >
+              Text
+            </a>
+          </>
         ) : (
-          <span className="h-10 rounded-full border border-amber-200 bg-amber-50 px-3 text-sm font-semibold text-amber-900 inline-flex items-center">
+          <span className="h-12 rounded-full border border-amber-200 bg-amber-50 px-3 text-sm font-semibold text-amber-900 inline-flex items-center">
             No phone on file
           </span>
         )}
         <button
           type="button"
           onClick={() => updateJobState(j.jobId, { skipped: !j.skipped })}
-          className="h-10 rounded-full border border-amber-200 bg-amber-50 px-3 text-sm font-semibold text-amber-900"
+          className="h-12 rounded-full border border-amber-200 bg-amber-50 px-3 text-sm font-semibold text-amber-900"
         >
           {j.skipped ? "Undo not home" : "Not home"}
         </button>
@@ -298,6 +323,8 @@ function DemoJobCard({ job: j }: { job: DayJobVM }) {
         }}
         className="mt-3 min-h-[44px] w-full resize-y rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-900 shadow-sm outline-none focus:border-[var(--brand)]"
       />
+    </div>
+    </SwipeableJobRow>
     </li>
   );
-}
+});

@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { memo, useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { SwipeableJobRow } from "@/components/SwipeableJobRow";
 import { Toast, useToast } from "@/components/Toast";
 import type { DayJobVM } from "@/lib/dayJobVm";
 import type { PaymentType } from "@/lib/models";
@@ -68,6 +69,8 @@ export function DayJobsClient({
   const [groupByStreet, setGroupByStreet] = useState(true);
   const [reorderMode, setReorderMode] = useState(false);
   const [openMore, setOpenMore] = useState<Record<string, boolean>>({});
+  const [moveOpenFor, setMoveOpenFor] = useState<string | null>(null);
+  const [moveToDate, setMoveToDate] = useState<string>("");
 
   const jobsById = useMemo(() => new Map(jobs.map((j) => [j.jobId, j])), [jobs]);
 
@@ -78,6 +81,19 @@ export function DayJobsClient({
     if (!showRemainingOnly) return all;
     return all.filter((j) => !(j.cleaned && j.collected) && !j.skipped);
   }, [jobsById, jobs, order, showRemainingOnly]);
+
+  // Kept in sync via ref rather than closed over directly, so the stable
+  // callbacks below (used as JobRow props) never need `orderedJobs` in their
+  // dependency array — that would recreate them, and every row, on every
+  // edit. Long job lists make that recreate-the-world cost real. Synced in a
+  // layout effect (not during render) since writing to a ref's `current` is
+  // only safe outside of render.
+  const orderedJobsRef = useRef(orderedJobs);
+  const jobsRef = useRef(jobs);
+  useLayoutEffect(() => {
+    orderedJobsRef.current = orderedJobs;
+    jobsRef.current = jobs;
+  });
 
   const streetGroups = useMemo(() => {
     if (!groupByStreet || reorderMode) {
@@ -97,114 +113,223 @@ export function DayJobsClient({
     }));
   }, [groupByStreet, orderedJobs, reorderMode]);
 
-  async function persistOrder(next: string[]) {
-    setSaving("order");
-    setError(null);
-    setOrder(next);
-    try {
-      await patchDay(date, { orderedJobIds: next });
-    } catch {
-      setError("Couldn’t save order. Try again.");
-    } finally {
-      setSaving(null);
-    }
-  }
+  const persistOrder = useCallback(
+    async (next: string[]) => {
+      setSaving("order");
+      setError(null);
+      setOrder(next);
+      try {
+        await patchDay(date, { orderedJobIds: next });
+      } catch {
+        setError("Couldn’t save order. Try again.");
+      } finally {
+        setSaving(null);
+      }
+    },
+    [date],
+  );
 
-  async function persistState(jobId: string, patch: Partial<DayJobVM>, quiet = false) {
-    setSaving(jobId);
-    setError(null);
-    const merged = jobs.find((j) => j.jobId === jobId);
-    if (!merged) return;
-    const next = { ...merged, ...patch };
-    if (patch.collected === true && !patch.paymentType && !merged.paymentType) {
-      next.paymentType = "cash";
-    }
-    setJobs((prev) => prev.map((j) => (j.jobId === jobId ? next : j)));
-    try {
-      await patchDay(date, {
-        jobState: {
-          [jobId]: {
-            cleaned: next.cleaned,
-            collected: next.collected,
-            visitNote: next.visitNote,
-            paymentType: next.paymentType,
-            skipped: next.skipped,
-            smsSentAt: next.smsSentAt,
+  const persistState = useCallback(
+    async (jobId: string, patch: Partial<DayJobVM>, quiet = false) => {
+      const current = jobsRef.current.find((j) => j.jobId === jobId);
+      if (!current) return;
+      const nextSnapshot: DayJobVM = { ...current, ...patch };
+      if (patch.collected === true && !patch.paymentType && !current.paymentType) {
+        nextSnapshot.paymentType = "cash";
+      }
+      setSaving(jobId);
+      setError(null);
+      // Optimistic: the row reflects the new state immediately. The network
+      // call below confirms it in the background — a flaky connection out in
+      // the field shouldn't lock the screen waiting on a round trip.
+      setJobs((prev) => prev.map((j) => (j.jobId === jobId ? nextSnapshot : j)));
+      try {
+        await patchDay(date, {
+          jobState: {
+            [jobId]: {
+              cleaned: nextSnapshot.cleaned,
+              collected: nextSnapshot.collected,
+              visitNote: nextSnapshot.visitNote,
+              paymentType: nextSnapshot.paymentType,
+              skipped: nextSnapshot.skipped,
+              smsSentAt: nextSnapshot.smsSentAt,
+            },
           },
-        },
-      });
-      if (!quiet) showToast("Saved");
-    } catch {
-      setError("Couldn’t save. Try again.");
-    } finally {
-      setSaving(null);
-    }
-  }
+        });
+        if (!quiet) showToast("Saved");
+      } catch {
+        setError("Couldn’t save. Try again.");
+      } finally {
+        setSaving(null);
+      }
+    },
+    [date, showToast],
+  );
 
-  async function markStreetDone(street: string) {
-    const targets = jobs.filter(
-      (j) => (j.street?.trim() || "Other") === street && !j.skipped,
-    );
-    for (const j of targets) {
-      await persistState(
-        j.jobId,
-        { cleaned: true, collected: true, paymentType: j.paymentType ?? "cash" },
-        true,
+  const markStreetDone = useCallback(
+    async (street: string) => {
+      const targets = orderedJobsRef.current.filter(
+        (j) => (j.street?.trim() || "Other") === street && !j.skipped,
       );
-    }
-    showToast(`Marked ${street} done`);
-  }
+      for (const j of targets) {
+        await persistState(
+          j.jobId,
+          { cleaned: true, collected: true, paymentType: j.paymentType ?? "cash" },
+          true,
+        );
+      }
+      showToast(`Marked ${street} done`);
+    },
+    [persistState, showToast],
+  );
 
-  async function notHome(job: DayJobVM) {
-    const tomorrow = addDays(date as never, 1);
-    setSaving(job.jobId);
-    try {
-      await moveJob({ jobId: job.jobId, fromDate: date, toDate: tomorrow });
-      showToast("Moved to tomorrow");
-      window.location.reload();
-    } catch {
-      setError("Couldn’t move. Try again.");
-      setSaving(null);
-    }
-  }
+  const notHome = useCallback(
+    async (job: DayJobVM) => {
+      const tomorrow = addDays(date as never, 1);
+      setSaving(job.jobId);
+      try {
+        await moveJob({ jobId: job.jobId, fromDate: date, toDate: tomorrow });
+        showToast("Moved to tomorrow");
+        window.location.reload();
+      } catch {
+        setError("Couldn’t move. Try again.");
+        setSaving(null);
+      }
+    },
+    [date, showToast],
+  );
 
-  async function addOneOff(input: {
-    name: string;
-    address: string;
-    phone: string;
-    pricePence: number;
-  }) {
-    setSaving("oneoff");
-    setError(null);
-    try {
-      await patchDay(date, { addOneOff: input });
-      // Reload the page state cheaply by forcing a refresh.
-      // (Server-render will rebuild from KV; keeps client code small.)
-      window.location.reload();
-    } catch {
-      setError("Couldn’t add one-off. Try again.");
-    } finally {
-      setSaving(null);
-    }
-  }
+  const addOneOff = useCallback(
+    async (input: { name: string; address: string; phone: string; pricePence: number }) => {
+      setSaving("oneoff");
+      setError(null);
+      try {
+        await patchDay(date, { addOneOff: input });
+        // Reload the page state cheaply by forcing a refresh.
+        // (Server-render will rebuild from KV; keeps client code small.)
+        window.location.reload();
+      } catch {
+        setError("Couldn’t add one-off. Try again.");
+      } finally {
+        setSaving(null);
+      }
+    },
+    [date],
+  );
 
-  async function deleteOneOff(jobId: string) {
-    if (!jobId.startsWith("oneoff:")) return;
-    setSaving(jobId);
-    setError(null);
-    try {
-      await patchDay(date, { deleteOneOffId: jobId });
-      window.location.reload();
-    } catch {
-      setError("Couldn’t delete. Try again.");
-    } finally {
-      setSaving(null);
-    }
-  }
+  const deleteOneOff = useCallback(
+    async (jobId: string) => {
+      if (!jobId.startsWith("oneoff:")) return;
+      setSaving(jobId);
+      setError(null);
+      try {
+        await patchDay(date, { deleteOneOffId: jobId });
+        window.location.reload();
+      } catch {
+        setError("Couldn’t delete. Try again.");
+      } finally {
+        setSaving(null);
+      }
+    },
+    [date],
+  );
 
-  const [dragId, setDragId] = useState<string | null>(null);
-  const [moveOpenFor, setMoveOpenFor] = useState<string | null>(null);
-  const [moveToDate, setMoveToDate] = useState<string>("");
+  const removeJobFromWeek = useCallback(
+    async (job: DayJobVM) => {
+      setSaving(job.jobId);
+      setError(null);
+      try {
+        await removeFromWeek({ jobId: job.jobId, dueDate: date });
+        window.location.reload();
+      } catch {
+        setError("Couldn’t remove. Try again.");
+        setSaving(null);
+      }
+    },
+    [date],
+  );
+
+  const moveJobTo = useCallback(
+    async (job: DayJobVM, toDate: string) => {
+      setSaving(job.jobId);
+      setError(null);
+      const targets =
+        job.kind === "scheduled" && job.street
+          ? orderedJobsRef.current
+              .filter((x) => x.kind === "scheduled" && x.street && x.street === job.street)
+              .map((x) => x.jobId)
+          : [job.jobId];
+      try {
+        for (const jobId of targets) {
+          await moveJob({ jobId, fromDate: date, toDate });
+        }
+        window.location.reload();
+      } catch {
+        setError("Couldn’t move. Try again.");
+        setSaving(null);
+      }
+    },
+    [date],
+  );
+
+  const toggleMore = useCallback((jobId: string) => {
+    setOpenMore((m) => ({ ...m, [jobId]: !Boolean(m[jobId]) }));
+  }, []);
+
+  const openMove = useCallback(
+    (jobId: string) => {
+      setMoveOpenFor((cur) => (cur === jobId ? null : jobId));
+      setMoveToDate(date);
+    },
+    [date],
+  );
+
+  const moveUp = useCallback(
+    (idx: number) => {
+      if (idx <= 0) return;
+      const ids = orderedJobsRef.current.map((x) => x.jobId);
+      const a = ids[idx - 1];
+      ids[idx - 1] = ids[idx];
+      ids[idx] = a;
+      void persistOrder(ids);
+    },
+    [persistOrder],
+  );
+
+  const moveDown = useCallback(
+    (idx: number) => {
+      const ids = orderedJobsRef.current.map((x) => x.jobId);
+      if (idx >= ids.length - 1) return;
+      const a = ids[idx + 1];
+      ids[idx + 1] = ids[idx];
+      ids[idx] = a;
+      void persistOrder(ids);
+    },
+    [persistOrder],
+  );
+
+  const dragIdRef = useRef<string | null>(null);
+
+  const handleDragStart = useCallback((jobId: string) => {
+    dragIdRef.current = jobId;
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+  }, []);
+
+  const handleDrop = useCallback(
+    (jobId: string) => {
+      const dragId = dragIdRef.current;
+      if (!dragId || dragId === jobId) return;
+      const next = orderedJobsRef.current.map((x) => x.jobId).filter((x) => x !== dragId);
+      const targetIndex = next.indexOf(jobId);
+      next.splice(targetIndex, 0, dragId);
+      void persistOrder(next);
+      dragIdRef.current = null;
+    },
+    [persistOrder],
+  );
 
   return (
     <div className="flex flex-col gap-3">
@@ -261,7 +386,7 @@ export function DayJobsClient({
         </div>
         <p className="mt-1 text-xs text-zinc-600">
           Tap <span className="font-semibold">Done</span> when finished, or use Cleaned / Collected
-          separately. “More” for notes and moving.
+          separately. Swipe a job right for Paid, left to skip. “More” for notes and moving.
         </p>
       </div>
 
@@ -281,376 +406,35 @@ export function DayJobsClient({
               </div>
             ) : null}
             <ul className="space-y-3">
-        {group.jobs.map((j, idx) => (
-          <li
-            key={j.jobId}
-            draggable={reorderMode}
-            onDragStart={() => setDragId(j.jobId)}
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={() => {
-              if (!reorderMode) return;
-              if (!dragId || dragId === j.jobId) return;
-              const next = orderedJobs.map((x) => x.jobId).filter((x) => x !== dragId);
-              const targetIndex = next.indexOf(j.jobId);
-              next.splice(targetIndex, 0, dragId);
-              void persistOrder(next);
-              setDragId(null);
-            }}
-            className={[
-              "rounded-3xl border bg-white p-4 shadow-sm",
-              j.skipped ? "border-zinc-300 opacity-60" : "border-zinc-200",
-              compactMode ? "p-3" : "",
-            ].join(" ")}
-          >
-            <div className="min-w-0">
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className={["truncate font-semibold text-zinc-900", compactMode ? "text-lg" : "text-base"].join(" ")}>
-                      {j.title}
-                    </p>
-                    {j.isFirstVisit ? (
-                      <span className="rounded-full bg-[var(--brand-tint)] px-2 py-0.5 text-xs font-semibold text-[var(--brand-dark)]">
-                        First visit
-                      </span>
-                    ) : null}
-                    {j.skipped ? (
-                      <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-semibold text-zinc-500">
-                        Not home
-                      </span>
-                    ) : null}
-                  </div>
-                  <p className="mt-0.5 line-clamp-2 text-sm text-zinc-600">{j.subtitle}</p>
-                </div>
-                {!compactMode ? (
-                  <div className="shrink-0 text-right">
-                    <p className="text-sm font-semibold text-zinc-900">
-                      {formatMoneyPounds(j.pricePence)}
-                    </p>
-                  </div>
-                ) : null}
-              </div>
-
-              {j.customerNotes ? (
-                <div className="mt-2 rounded-xl border border-amber-200 bg-amber-50 p-2.5">
-                  <p className="text-xs font-semibold text-amber-800">Note</p>
-                  <p className="mt-0.5 text-sm text-amber-900">{j.customerNotes}</p>
-                </div>
-              ) : null}
-
-              <button
-                type="button"
-                onClick={() => {
-                  const done = !(j.cleaned && j.collected);
-                  void persistState(j.jobId, {
-                    cleaned: done,
-                    collected: done,
-                    paymentType: done ? j.paymentType ?? "cash" : j.paymentType,
-                  });
-                }}
-                className={[
-                  "mt-3 w-full rounded-full font-semibold shadow-sm",
-                  compactMode ? "h-14 text-lg" : "h-12 text-base",
-                  j.cleaned && j.collected
-                    ? "bg-zinc-900 text-white hover:bg-zinc-800"
-                    : "bg-emerald-600 text-white hover:bg-emerald-500",
-                ].join(" ")}
-              >
-                {j.cleaned && j.collected ? "Done ✓" : "Mark done"}
-              </button>
-
-              <div className="mt-2 grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => void persistState(j.jobId, { cleaned: !j.cleaned })}
-                  className={[
-                    "h-10 rounded-full text-sm font-semibold shadow-sm",
-                    j.cleaned
-                      ? "bg-emerald-600/15 text-emerald-800 ring-1 ring-emerald-600/30"
-                      : "border border-zinc-200 bg-white text-zinc-700",
-                  ].join(" ")}
-                >
-                  Cleaned
-                </button>
-                <button
-                  type="button"
-                  onClick={() => void persistState(j.jobId, { collected: !j.collected })}
-                  className={[
-                    "h-10 rounded-full text-sm font-semibold shadow-sm",
-                    j.collected
-                      ? "bg-amber-600/15 text-amber-900 ring-1 ring-amber-600/30"
-                      : "border border-zinc-200 bg-white text-zinc-700",
-                  ].join(" ")}
-                >
-                  Collected
-                </button>
-              </div>
-
-              {j.collected ? (
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {(["cash", "bank", "card"] as PaymentType[]).map((pt) => (
-                    <button
-                      key={pt}
-                      type="button"
-                      onClick={() => void persistState(j.jobId, { paymentType: pt })}
-                      className={[
-                        "h-9 rounded-full px-3 text-xs font-semibold capitalize",
-                        j.paymentType === pt
-                          ? "bg-zinc-900 text-white"
-                          : "border border-zinc-200 bg-white text-zinc-700",
-                      ].join(" ")}
-                    >
-                      {pt}
-                    </button>
-                  ))}
-                </div>
-              ) : null}
-
-              {j.smsSentAt ? (
-                <p className="mt-2 text-xs font-medium text-sky-700">Text marked done</p>
-              ) : null}
-
-              <div className="mt-3 flex flex-wrap items-center gap-2">
-                <a
-                  href={mapsHref(j.subtitle)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="h-10 rounded-full border border-zinc-200 bg-white px-3 text-sm font-semibold text-zinc-900 shadow-sm hover:bg-zinc-50"
-                >
-                  Map
-                </a>
-                {j.phone ? (
-                  <a
-                    href={`tel:${j.phone}`}
-                    className="h-10 rounded-full border border-zinc-200 bg-white px-3 text-sm font-semibold text-zinc-900 shadow-sm hover:bg-zinc-50"
-                  >
-                    Call
-                  </a>
-                ) : customerEditHref(j.jobId) ? (
-                  <Link
-                    href={customerEditHref(j.jobId)!}
-                    className="h-10 rounded-full border border-amber-200 bg-amber-50 px-3 text-sm font-semibold text-amber-900 shadow-sm hover:bg-amber-100"
-                  >
-                    Add phone
-                  </Link>
-                ) : null}
-
-                <button
-                  type="button"
-                  onClick={() => void notHome(j)}
-                  className="h-10 rounded-full border border-amber-200 bg-amber-50 px-3 text-sm font-semibold text-amber-900"
-                >
-                  Not home
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setOpenMore((m) => ({ ...m, [j.jobId]: !Boolean(m[j.jobId]) }))}
-                  className="h-10 rounded-full border border-zinc-200 bg-white px-3 text-sm font-semibold text-zinc-900 shadow-sm hover:bg-zinc-50"
-                >
-                  {openMore[j.jobId] ? "Less" : "More"}
-                </button>
-
-                {reorderMode ? (
-                  <>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (idx === 0) return;
-                        const ids = orderedJobs.map((x) => x.jobId);
-                        const a = ids[idx - 1];
-                        ids[idx - 1] = ids[idx];
-                        ids[idx] = a;
-                        void persistOrder(ids);
-                      }}
-                      className="h-10 rounded-full border border-zinc-200 bg-white px-3 text-sm font-semibold text-zinc-900 shadow-sm hover:bg-zinc-50 disabled:opacity-40"
-                      disabled={idx === 0 || saving === "order"}
-                    >
-                      Up
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (idx === orderedJobs.length - 1) return;
-                        const ids = orderedJobs.map((x) => x.jobId);
-                        const a = ids[idx + 1];
-                        ids[idx + 1] = ids[idx];
-                        ids[idx] = a;
-                        void persistOrder(ids);
-                      }}
-                      className="h-10 rounded-full border border-zinc-200 bg-white px-3 text-sm font-semibold text-zinc-900 shadow-sm hover:bg-zinc-50 disabled:opacity-40"
-                      disabled={idx === orderedJobs.length - 1 || saving === "order"}
-                    >
-                      Down
-                    </button>
-                  </>
-                ) : null}
-              </div>
-
-              {openMore[j.jobId] ? (
-                <div className="mt-3 rounded-2xl border border-zinc-200 bg-zinc-50 p-3">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setMoveOpenFor((cur) => (cur === j.jobId ? null : j.jobId));
-                        setMoveToDate(date);
-                      }}
-                      className="h-10 rounded-full bg-white px-3 text-sm font-semibold text-zinc-900 shadow-sm hover:bg-zinc-50"
-                    >
-                      Move
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={async () => {
-                        setSaving(j.jobId);
-                        setError(null);
-                        try {
-                          await removeFromWeek({ jobId: j.jobId, dueDate: date });
-                          window.location.reload();
-                        } catch {
-                          setError("Couldn’t remove. Try again.");
-                          setSaving(null);
-                        }
-                      }}
-                      className="h-10 rounded-full bg-white px-3 text-sm font-semibold text-zinc-900 shadow-sm hover:bg-zinc-50 disabled:opacity-40"
-                      disabled={saving !== null}
-                    >
-                      Remove from week
-                    </button>
-
-                    {j.deletable ? (
-                      <button
-                        type="button"
-                        onClick={() => void deleteOneOff(j.jobId)}
-                        className="h-10 rounded-full border border-red-200 bg-white px-3 text-sm font-semibold text-red-700 shadow-sm hover:bg-red-50"
-                        disabled={saving !== null}
-                      >
-                        Delete one-off
-                      </button>
-                    ) : null}
-                  </div>
-
-                  <label className="mt-3 block">
-                    <span className="text-sm font-semibold text-zinc-900">Note</span>
-                    <textarea
-                      defaultValue={j.visitNote}
-                      placeholder="Visit note (e.g. dog was loose)…"
-                      onBlur={(e) => {
-                        const v = e.currentTarget.value;
-                        if (v === j.visitNote) return;
-                        void persistState(j.jobId, { visitNote: v });
-                      }}
-                      className="mt-1 min-h-[44px] w-full resize-y rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm outline-none focus:border-[var(--brand)]"
-                    />
-                  </label>
-                </div>
-              ) : null}
-
-              {moveOpenFor === j.jobId ? (
-                <div className="mt-3 rounded-2xl border border-zinc-200 bg-zinc-50 p-3">
-                  <p className="text-sm font-semibold text-zinc-900">Move to</p>
-                  <div className="mt-2 grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={async () => {
-                        const toDate = new Date(Date.now() - 86_400_000)
-                          .toISOString()
-                          .slice(0, 10);
-                        setSaving(j.jobId);
-                        try {
-                          await moveJob({ jobId: j.jobId, fromDate: date, toDate });
-                          window.location.reload();
-                        } catch {
-                          setError("Couldn’t move. Try again.");
-                          setSaving(null);
-                        }
-                      }}
-                      className="h-10 rounded-full bg-white text-sm font-semibold text-zinc-900 shadow-sm hover:bg-zinc-50"
-                      disabled={saving !== null}
-                    >
-                      Yesterday
-                    </button>
-                    <button
-                      type="button"
-                      onClick={async () => {
-                        const toDate = new Date(Date.now() + 86_400_000)
-                          .toISOString()
-                          .slice(0, 10);
-                        setSaving(j.jobId);
-                        try {
-                          await moveJob({ jobId: j.jobId, fromDate: date, toDate });
-                          window.location.reload();
-                        } catch {
-                          setError("Couldn’t move. Try again.");
-                          setSaving(null);
-                        }
-                      }}
-                      className="h-10 rounded-full bg-white text-sm font-semibold text-zinc-900 shadow-sm hover:bg-zinc-50"
-                      disabled={saving !== null}
-                    >
-                      Tomorrow
-                    </button>
-                  </div>
-
-                  <div className="mt-2 flex items-center gap-2">
-                    <input
-                      type="date"
-                      value={moveToDate}
-                      onChange={(e) => setMoveToDate(e.target.value)}
-                      className="h-10 flex-1 rounded-xl border border-zinc-200 bg-white px-3 text-sm font-semibold text-zinc-900 shadow-sm outline-none focus:border-[var(--brand)]"
-                    />
-                    <button
-                      type="button"
-                      onClick={async () => {
-                        if (!moveToDate) return;
-                        setSaving(j.jobId);
-                        setError(null);
-                        const toDate = moveToDate;
-                        const targets =
-                          j.kind === "scheduled" && j.street
-                            ? orderedJobs
-                                .filter(
-                                  (x) =>
-                                    x.kind === "scheduled" &&
-                                    x.street &&
-                                    x.street === j.street,
-                                )
-                                .map((x) => x.jobId)
-                            : [j.jobId];
-                        try {
-                          for (const jobId of targets) {
-                            await moveJob({ jobId, fromDate: date, toDate });
-                          }
-                          window.location.reload();
-                        } catch {
-                          setError("Couldn’t move. Try again.");
-                          setSaving(null);
-                        }
-                      }}
-                      className="h-10 rounded-full bg-zinc-900 px-3 text-sm font-semibold text-white shadow-sm hover:bg-zinc-800 disabled:opacity-40"
-                      disabled={saving !== null || !moveToDate}
-                    >
-                      Move
-                    </button>
-                  </div>
-
-                  {j.kind === "scheduled" && j.street ? (
-                    <p className="mt-2 text-xs text-zinc-600">
-                      This will move everyone on <span className="font-semibold">{j.street}</span>{" "}
-                      who is on this day (keeps streets aligned).
-                    </p>
-                  ) : null}
-                </div>
-              ) : null}
-            </div>
-
-            {saving === j.jobId ? (
-              <p className="mt-2 text-xs font-medium text-zinc-500">Saving…</p>
-            ) : null}
-          </li>
-        ))}
+              {group.jobs.map((j, idx) => (
+                <JobRow
+                  key={j.jobId}
+                  job={j}
+                  idx={idx}
+                  isLast={idx === orderedJobs.length - 1}
+                  compactMode={compactMode}
+                  reorderMode={reorderMode}
+                  isSaving={saving === j.jobId}
+                  isOrderSaving={saving === "order"}
+                  isAnySaving={saving !== null}
+                  isOpenMore={Boolean(openMore[j.jobId])}
+                  isMoveOpen={moveOpenFor === j.jobId}
+                  moveToDate={moveOpenFor === j.jobId ? moveToDate : ""}
+                  onPersist={persistState}
+                  onNotHome={notHome}
+                  onToggleMore={toggleMore}
+                  onOpenMove={openMove}
+                  onSetMoveToDate={setMoveToDate}
+                  onMoveUp={moveUp}
+                  onMoveDown={moveDown}
+                  onRemoveFromWeek={removeJobFromWeek}
+                  onDeleteOneOff={deleteOneOff}
+                  onMoveTo={moveJobTo}
+                  onDragStart={handleDragStart}
+                  onDragOver={handleDragOver}
+                  onDrop={handleDrop}
+                />
+              ))}
             </ul>
           </div>
         ))}
@@ -662,6 +446,373 @@ export function DayJobsClient({
     </div>
   );
 }
+
+const JobRow = memo(function JobRow({
+  job: j,
+  idx,
+  isLast,
+  compactMode,
+  reorderMode,
+  isSaving,
+  isOrderSaving,
+  isAnySaving,
+  isOpenMore,
+  isMoveOpen,
+  moveToDate,
+  onPersist,
+  onNotHome,
+  onToggleMore,
+  onOpenMove,
+  onSetMoveToDate,
+  onMoveUp,
+  onMoveDown,
+  onRemoveFromWeek,
+  onDeleteOneOff,
+  onMoveTo,
+  onDragStart,
+  onDragOver,
+  onDrop,
+}: {
+  job: DayJobVM;
+  idx: number;
+  isLast: boolean;
+  compactMode: boolean;
+  reorderMode: boolean;
+  isSaving: boolean;
+  isOrderSaving: boolean;
+  isAnySaving: boolean;
+  isOpenMore: boolean;
+  isMoveOpen: boolean;
+  moveToDate: string;
+  onPersist: (jobId: string, patch: Partial<DayJobVM>, quiet?: boolean) => void;
+  onNotHome: (job: DayJobVM) => void;
+  onToggleMore: (jobId: string) => void;
+  onOpenMove: (jobId: string) => void;
+  onSetMoveToDate: (v: string) => void;
+  onMoveUp: (idx: number) => void;
+  onMoveDown: (idx: number) => void;
+  onRemoveFromWeek: (job: DayJobVM) => void;
+  onDeleteOneOff: (jobId: string) => void;
+  onMoveTo: (job: DayJobVM, toDate: string) => void;
+  onDragStart: (jobId: string) => void;
+  onDragOver: (e: React.DragEvent) => void;
+  onDrop: (jobId: string) => void;
+}) {
+  const editHref = customerEditHref(j.jobId);
+  const done = j.cleaned && j.collected;
+
+  return (
+    <li
+      draggable={reorderMode}
+      onDragStart={() => onDragStart(j.jobId)}
+      onDragOver={onDragOver}
+      onDrop={() => onDrop(j.jobId)}
+    >
+      <SwipeableJobRow
+        disabled={reorderMode}
+        rightLabel="Paid"
+        leftLabel={j.skipped ? "Unskip" : "Skip"}
+        onSwipeRight={() => onPersist(j.jobId, { collected: true, paymentType: j.paymentType ?? "cash" })}
+        onSwipeLeft={() => onPersist(j.jobId, { skipped: !j.skipped }, true)}
+      >
+        <div
+          className={[
+            "rounded-3xl border bg-white p-4 shadow-sm",
+            j.skipped ? "border-zinc-300 opacity-60" : "border-zinc-200",
+            compactMode ? "p-3" : "",
+          ].join(" ")}
+        >
+          <div className="min-w-0">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className={["truncate font-semibold text-zinc-900", compactMode ? "text-lg" : "text-base"].join(" ")}>
+                    {j.title}
+                  </p>
+                  {j.isFirstVisit ? (
+                    <span className="rounded-full bg-[var(--brand-tint)] px-2 py-0.5 text-xs font-semibold text-[var(--brand-dark)]">
+                      First visit
+                    </span>
+                  ) : null}
+                  {j.skipped ? (
+                    <span className="rounded-full bg-zinc-200 px-2 py-0.5 text-xs font-semibold text-zinc-700">
+                      Not home
+                    </span>
+                  ) : null}
+                </div>
+                <p className="mt-0.5 line-clamp-2 text-sm text-zinc-600">{j.subtitle}</p>
+              </div>
+              {!compactMode ? (
+                <div className="shrink-0 text-right">
+                  <p className="text-sm font-semibold text-zinc-900">
+                    {formatMoneyPounds(j.pricePence)}
+                  </p>
+                </div>
+              ) : null}
+            </div>
+
+            {j.customerNotes ? (
+              <div className="mt-2 rounded-xl border border-amber-200 bg-amber-50 p-2.5">
+                <p className="text-xs font-semibold text-amber-800">Note</p>
+                <p className="mt-0.5 text-sm text-amber-900">{j.customerNotes}</p>
+              </div>
+            ) : null}
+
+            <button
+              type="button"
+              onClick={() => {
+                const next = !done;
+                onPersist(j.jobId, {
+                  cleaned: next,
+                  collected: next,
+                  paymentType: next ? j.paymentType ?? "cash" : j.paymentType,
+                });
+              }}
+              className={[
+                "mt-3 w-full rounded-full font-semibold shadow-sm",
+                compactMode ? "h-14 text-lg" : "h-12 text-base",
+                done
+                  ? "bg-zinc-900 text-white hover:bg-zinc-800"
+                  : "bg-emerald-600 text-white hover:bg-emerald-500",
+              ].join(" ")}
+            >
+              {done ? "Done ✓" : "Mark done"}
+            </button>
+
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => onPersist(j.jobId, { cleaned: !j.cleaned })}
+                className={[
+                  "h-12 rounded-full text-sm font-semibold shadow-sm",
+                  j.cleaned
+                    ? "bg-emerald-600/15 text-emerald-800 ring-1 ring-emerald-600/30"
+                    : "border border-zinc-200 bg-white text-zinc-700",
+                ].join(" ")}
+              >
+                Cleaned
+              </button>
+              <button
+                type="button"
+                onClick={() => onPersist(j.jobId, { collected: !j.collected })}
+                className={[
+                  "h-12 rounded-full text-sm font-semibold shadow-sm",
+                  j.collected
+                    ? "bg-amber-600/15 text-amber-900 ring-1 ring-amber-600/30"
+                    : "border border-zinc-200 bg-white text-zinc-700",
+                ].join(" ")}
+              >
+                Collected
+              </button>
+            </div>
+
+            {j.collected ? (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {(["cash", "bank", "card"] as PaymentType[]).map((pt) => (
+                  <button
+                    key={pt}
+                    type="button"
+                    onClick={() => onPersist(j.jobId, { paymentType: pt })}
+                    className={[
+                      "h-9 rounded-full px-3 text-xs font-semibold capitalize",
+                      j.paymentType === pt
+                        ? "bg-zinc-900 text-white"
+                        : "border border-zinc-200 bg-white text-zinc-700",
+                    ].join(" ")}
+                  >
+                    {pt}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+
+            {j.smsSentAt ? (
+              <p className="mt-2 text-xs font-medium text-sky-700">Text marked done</p>
+            ) : null}
+
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <a
+                href={mapsHref(j.subtitle)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="h-12 rounded-full border border-zinc-200 bg-white px-3 text-sm font-semibold text-zinc-900 shadow-sm hover:bg-zinc-50 inline-flex items-center"
+              >
+                Map
+              </a>
+              {j.phone ? (
+                <>
+                  <a
+                    href={`tel:${j.phone}`}
+                    className="h-12 rounded-full border border-zinc-200 bg-white px-3 text-sm font-semibold text-zinc-900 shadow-sm hover:bg-zinc-50 inline-flex items-center"
+                  >
+                    Call
+                  </a>
+                  <a
+                    href={`sms:${j.phone}`}
+                    className="h-12 rounded-full border border-zinc-200 bg-white px-3 text-sm font-semibold text-zinc-900 shadow-sm hover:bg-zinc-50 inline-flex items-center"
+                  >
+                    Text
+                  </a>
+                </>
+              ) : editHref ? (
+                <Link
+                  href={editHref}
+                  className="h-12 rounded-full border border-amber-200 bg-amber-50 px-3 text-sm font-semibold text-amber-900 shadow-sm hover:bg-amber-100 inline-flex items-center"
+                >
+                  Add phone
+                </Link>
+              ) : null}
+
+              <button
+                type="button"
+                onClick={() => onNotHome(j)}
+                className="h-12 rounded-full border border-amber-200 bg-amber-50 px-3 text-sm font-semibold text-amber-900"
+              >
+                Not home
+              </button>
+
+              <button
+                type="button"
+                onClick={() => onToggleMore(j.jobId)}
+                className="h-12 rounded-full border border-zinc-200 bg-white px-3 text-sm font-semibold text-zinc-900 shadow-sm hover:bg-zinc-50"
+              >
+                {isOpenMore ? "Less" : "More"}
+              </button>
+
+              {reorderMode ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => onMoveUp(idx)}
+                    className="h-12 rounded-full border border-zinc-200 bg-white px-3 text-sm font-semibold text-zinc-900 shadow-sm hover:bg-zinc-50 disabled:opacity-40"
+                    disabled={idx === 0 || isOrderSaving}
+                  >
+                    Up
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onMoveDown(idx)}
+                    className="h-12 rounded-full border border-zinc-200 bg-white px-3 text-sm font-semibold text-zinc-900 shadow-sm hover:bg-zinc-50 disabled:opacity-40"
+                    disabled={isLast || isOrderSaving}
+                  >
+                    Down
+                  </button>
+                </>
+              ) : null}
+            </div>
+
+            {isOpenMore ? (
+              <div className="mt-3 rounded-2xl border border-zinc-200 bg-zinc-50 p-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => onOpenMove(j.jobId)}
+                    className="h-12 rounded-full bg-white px-3 text-sm font-semibold text-zinc-900 shadow-sm hover:bg-zinc-50"
+                  >
+                    Move
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => onRemoveFromWeek(j)}
+                    className="h-12 rounded-full bg-white px-3 text-sm font-semibold text-zinc-900 shadow-sm hover:bg-zinc-50 disabled:opacity-40"
+                    disabled={isAnySaving}
+                  >
+                    Remove from week
+                  </button>
+
+                  {j.deletable ? (
+                    <button
+                      type="button"
+                      onClick={() => onDeleteOneOff(j.jobId)}
+                      className="h-12 rounded-full border border-red-200 bg-white px-3 text-sm font-semibold text-red-700 shadow-sm hover:bg-red-50"
+                      disabled={isAnySaving}
+                    >
+                      Delete one-off
+                    </button>
+                  ) : null}
+                </div>
+
+                <label className="mt-3 block">
+                  <span className="text-sm font-semibold text-zinc-900">Note</span>
+                  <textarea
+                    defaultValue={j.visitNote}
+                    placeholder="Visit note (e.g. dog was loose)…"
+                    onBlur={(e) => {
+                      const v = e.currentTarget.value;
+                      if (v === j.visitNote) return;
+                      onPersist(j.jobId, { visitNote: v });
+                    }}
+                    className="mt-1 min-h-[44px] w-full resize-y rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm outline-none focus:border-[var(--brand)]"
+                  />
+                </label>
+              </div>
+            ) : null}
+
+            {isMoveOpen ? (
+              <div className="mt-3 rounded-2xl border border-zinc-200 bg-zinc-50 p-3">
+                <p className="text-sm font-semibold text-zinc-900">Move to</p>
+                <div className="mt-2 grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const toDate = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10);
+                      onMoveTo(j, toDate);
+                    }}
+                    className="h-12 rounded-full bg-white text-sm font-semibold text-zinc-900 shadow-sm hover:bg-zinc-50"
+                    disabled={isAnySaving}
+                  >
+                    Yesterday
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const toDate = new Date(Date.now() + 86_400_000).toISOString().slice(0, 10);
+                      onMoveTo(j, toDate);
+                    }}
+                    className="h-12 rounded-full bg-white text-sm font-semibold text-zinc-900 shadow-sm hover:bg-zinc-50"
+                    disabled={isAnySaving}
+                  >
+                    Tomorrow
+                  </button>
+                </div>
+
+                <div className="mt-2 flex items-center gap-2">
+                  <input
+                    type="date"
+                    value={moveToDate}
+                    onChange={(e) => onSetMoveToDate(e.target.value)}
+                    className="h-12 flex-1 rounded-xl border border-zinc-200 bg-white px-3 text-sm font-semibold text-zinc-900 shadow-sm outline-none focus:border-[var(--brand)]"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!moveToDate) return;
+                      onMoveTo(j, moveToDate);
+                    }}
+                    className="h-12 rounded-full bg-zinc-900 px-3 text-sm font-semibold text-white shadow-sm hover:bg-zinc-800 disabled:opacity-40"
+                    disabled={isAnySaving || !moveToDate}
+                  >
+                    Move
+                  </button>
+                </div>
+
+                {j.kind === "scheduled" && j.street ? (
+                  <p className="mt-2 text-xs text-zinc-600">
+                    This will move everyone on <span className="font-semibold">{j.street}</span>{" "}
+                    who is on this day (keeps streets aligned).
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
+          </div>
+
+          {isSaving ? <p className="mt-2 text-xs font-medium text-zinc-500">Saving…</p> : null}
+        </div>
+      </SwipeableJobRow>
+    </li>
+  );
+});
 
 function AddOneOffCard({
   disabled,
@@ -756,4 +907,3 @@ function AddOneOffCard({
     </div>
   );
 }
-
