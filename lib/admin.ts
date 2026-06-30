@@ -123,6 +123,67 @@ export async function slugExists(slug: string): Promise<boolean> {
   return res.rows.length > 0;
 }
 
+// Neon's free tier gives 0.5 GB of storage. Override with DB_STORAGE_LIMIT_BYTES
+// if the project is on a paid plan with a different cap.
+const DEFAULT_STORAGE_LIMIT_BYTES = 512 * 1024 * 1024;
+
+export type DatabaseHealth = {
+  usedBytes: number;
+  limitBytes: number;
+  usedPretty: string;
+  limitPretty: string;
+  percentUsed: number;
+  tables: { name: string; pretty: string; bytes: number }[];
+};
+
+function prettyBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  const units = ["KB", "MB", "GB", "TB"];
+  let value = bytes / 1024;
+  let i = 0;
+  while (value >= 1024 && i < units.length - 1) {
+    value /= 1024;
+    i++;
+  }
+  return `${value.toFixed(value < 10 ? 2 : 1)} ${units[i]}`;
+}
+
+export async function getDatabaseHealth(): Promise<DatabaseHealth | null> {
+  if (!isPostgresEnabled()) return null;
+  await ensureSchema();
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { sql } = require("@vercel/postgres") as typeof import("@vercel/postgres");
+
+  const limitBytes = Number(process.env.DB_STORAGE_LIMIT_BYTES) || DEFAULT_STORAGE_LIMIT_BYTES;
+
+  const sizeRes = await sql`select pg_database_size(current_database()) as bytes`;
+  const usedBytes = Number(sizeRes.rows[0]?.bytes ?? 0);
+
+  const tablesRes = await sql`
+    select
+      relname as name,
+      pg_total_relation_size(c.oid) as bytes
+    from pg_class c
+    join pg_namespace n on n.oid = c.relnamespace
+    where c.relkind = 'r' and n.nspname = 'public'
+    order by bytes desc
+    limit 8
+  `;
+
+  return {
+    usedBytes,
+    limitBytes,
+    usedPretty: prettyBytes(usedBytes),
+    limitPretty: prettyBytes(limitBytes),
+    percentUsed: limitBytes > 0 ? Math.min(100, (usedBytes / limitBytes) * 100) : 0,
+    tables: (tablesRes.rows as { name: string; bytes: number }[]).map((t) => ({
+      name: t.name,
+      bytes: Number(t.bytes),
+      pretty: prettyBytes(Number(t.bytes)),
+    })),
+  };
+}
+
 const TABLES_WITH_COMPANY_ID = ["app_settings", "moves", "removed", "days", "customers"];
 
 /**

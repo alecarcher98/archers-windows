@@ -57,7 +57,7 @@ function CompanyDetailsSection({ company }: { company: Company }) {
 
   return (
     <div className="rounded-3xl border border-zinc-200 bg-white p-4 shadow-sm">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
           <label className="block">
             <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
@@ -66,10 +66,10 @@ function CompanyDetailsSection({ company }: { company: Company }) {
             <input
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
-              className="mt-1 h-11 w-full max-w-sm rounded-xl border border-zinc-200 bg-white px-3 text-base font-semibold text-zinc-900 shadow-sm outline-none focus:border-[var(--brand)]"
+              className="mt-1 h-11 w-full rounded-xl border border-zinc-200 bg-white px-3 text-base font-semibold text-zinc-900 shadow-sm outline-none focus:border-[var(--brand)] sm:max-w-sm"
             />
           </label>
-          <p className="mt-2 text-sm text-zinc-500">
+          <p className="mt-2 truncate text-sm text-zinc-500">
             /c/{company.slug} ·{" "}
             <a
               href={`/c/${company.slug}`}
@@ -85,7 +85,7 @@ function CompanyDetailsSection({ company }: { company: Company }) {
           type="button"
           onClick={() => void onSave()}
           disabled={pending}
-          className="h-10 shrink-0 rounded-full bg-zinc-900 px-4 text-sm font-semibold text-white shadow-sm hover:bg-zinc-800 disabled:opacity-40"
+          className="h-10 w-full shrink-0 rounded-full bg-zinc-900 px-4 text-sm font-semibold text-white shadow-sm hover:bg-zinc-800 disabled:opacity-40 sm:w-auto"
         >
           {pending ? "Saving…" : saved ? "Saved" : "Save"}
         </button>
