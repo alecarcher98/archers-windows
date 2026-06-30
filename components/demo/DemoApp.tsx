@@ -77,6 +77,8 @@ function DemoAppShell() {
         </p>
         <a
           href={whatsAppLink("Hi — I'd like to get my round set up for £99")}
+          target="_blank"
+          rel="noopener"
           className="mt-3 inline-flex w-full items-center justify-center rounded-full bg-[var(--brand)] px-6 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-[var(--brand-dark)]"
         >
           Get your round set up — £99

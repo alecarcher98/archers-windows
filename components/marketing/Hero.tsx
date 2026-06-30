@@ -46,6 +46,8 @@ export function Hero() {
               <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center lg:justify-start">
                 <a
                   href={whatsAppLink("Hi — I'd like to get my round set up for £99")}
+                  target="_blank"
+                  rel="noopener"
                   className="w-full rounded-full bg-[var(--brand)] px-7 py-4 text-base font-semibold text-white shadow-md transition hover:bg-[var(--brand-dark)] sm:w-auto"
                 >
                   Get your round set up — £99

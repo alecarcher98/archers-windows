@@ -38,6 +38,8 @@ export function Pricing() {
             </ul>
             <a
               href={whatsAppLink("Hi — I'd like to get my round set up for £99")}
+              target="_blank"
+              rel="noopener"
               className="mt-7 block w-full rounded-full bg-[var(--brand)] px-7 py-4 text-base font-semibold text-white shadow-md transition hover:bg-[var(--brand-dark)]"
             >
               Get your round set up — £99

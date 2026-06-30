@@ -19,6 +19,8 @@ export function MarketingFooter() {
           <div className="flex flex-col gap-2 text-sm">
             <a
               href={whatsAppLink("Hi — I'd like to find out about RoundMate")}
+              target="_blank"
+              rel="noopener"
               className="text-zinc-700 hover:text-zinc-900"
             >
               WhatsApp

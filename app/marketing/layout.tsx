@@ -19,6 +19,7 @@ export const metadata: Metadata = {
     title: "RoundMate",
     description: "Done-for-you round management for window cleaners. Your round, simplified.",
     type: "website",
+    url: "/",
   },
 };
 

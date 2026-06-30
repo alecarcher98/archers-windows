@@ -54,12 +54,16 @@ export function Faq() {
             <div className="mt-7 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
               <a
                 href={whatsAppLink("Hi — I'd like to get my round set up for £99")}
+                target="_blank"
+                rel="noopener"
                 className="w-full rounded-full bg-[var(--brand)] px-7 py-4 text-base font-semibold text-white shadow-md transition hover:bg-[var(--brand-dark)] sm:w-auto"
               >
                 Get your round set up — £99
               </a>
               <a
                 href={whatsAppLink("Hi — I'd like to find out about RoundMate")}
+                target="_blank"
+                rel="noopener"
                 className="w-full rounded-full border border-zinc-700 px-7 py-4 text-base font-semibold text-white transition hover:border-zinc-500 sm:w-auto"
               >
                 WhatsApp me
