@@ -44,3 +44,12 @@ export function formatDisplayDateRange(start: string, end: string) {
   if (start === end) return formatDisplayDate(start);
   return `${formatDisplayDate(start)} → ${formatDisplayDate(end)}`;
 }
+
+const WEEKDAYS_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
+
+/** ISO yyyy-mm-dd → "Mon" */
+export function formatWeekdayShort(isoDate: string | IsoDate) {
+  const [y, m, d] = isoDate.split("-").map(Number);
+  if (!y || !m || !d) return "";
+  return WEEKDAYS_SHORT[new Date(y, m - 1, d).getDay()] ?? "";
+}
