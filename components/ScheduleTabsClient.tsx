@@ -5,6 +5,7 @@ import { useCallback, useMemo } from "react";
 import type { DayJobVM } from "@/components/DayJobsClient";
 import { TodayTabsClient } from "@/components/TodayTabsClient";
 import type { OverdueVM } from "@/components/OverdueClient";
+import { DayStrip } from "@/components/DayStrip";
 import { ScheduleWeekPanel } from "@/components/ScheduleWeekPanel";
 import { WeekSummaryPanel } from "@/components/WeekSummaryPanel";
 import { ScheduleMorePanel } from "@/components/ScheduleMorePanel";
@@ -71,6 +72,8 @@ export function ScheduleTabsClient({
 
   return (
     <div className="flex flex-col gap-3">
+      <DayStrip days={weekDays} activeDate={date} />
+
       <div className="grid grid-cols-3 rounded-xl border border-zinc-200 bg-zinc-50 p-1">
         <Segment active={tab === "day"} onClick={() => setTab("day")}>
           Day

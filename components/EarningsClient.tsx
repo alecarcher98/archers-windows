@@ -54,14 +54,14 @@ export function EarningsClient() {
   return (
     <div className="rounded-3xl border border-zinc-200 bg-white p-4 shadow-sm">
       <p className="text-sm font-semibold text-zinc-900">Custom range</p>
-      <div className="mt-3 grid grid-cols-2 gap-3">
+      <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
         <label className="grid gap-1">
           <span className="text-sm font-medium">Start</span>
           <input
             type="date"
             value={start}
             onChange={(e) => setStart(e.target.value)}
-            className="h-12 w-full rounded-xl border border-zinc-200 px-3"
+            className="h-12 w-full min-w-0 rounded-xl border border-zinc-200 px-3 text-base"
           />
         </label>
         <label className="grid gap-1">
@@ -70,7 +70,7 @@ export function EarningsClient() {
             type="date"
             value={end}
             onChange={(e) => setEnd(e.target.value)}
-            className="h-12 w-full rounded-xl border border-zinc-200 px-3"
+            className="h-12 w-full min-w-0 rounded-xl border border-zinc-200 px-3 text-base"
           />
         </label>
       </div>
