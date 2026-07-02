@@ -3,8 +3,16 @@ import { cookies } from "next/headers";
 import { authCookieName, createSessionCookieValue, tenantCookieName } from "@/lib/auth";
 import { verifyCredentials } from "@/lib/credentials";
 import { getDefaultCompanyId, resolveCompanyBySlug } from "@/lib/tenant";
+import { checkRateLimit, clientIp, rateLimitedResponse } from "@/lib/rateLimit";
+
+// 10 attempts per 10 minutes per IP — generous enough for a genuine typo
+// or two, tight enough to blunt credential-stuffing / slug enumeration.
+const LOGIN_RATE_LIMIT = { max: 10, windowSeconds: 10 * 60 };
 
 export async function POST(req: Request) {
+  const rate = await checkRateLimit(`login:${clientIp(req)}`, LOGIN_RATE_LIMIT);
+  if (!rate.allowed) return rateLimitedResponse(rate.retryAfterSeconds);
+
   let username = "";
   let password = "";
   let slug = "";

@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { getUsername, setCredentials, verifyCredentials } from "@/lib/credentials";
 import { getCurrentCompanyId } from "@/lib/tenant";
+import { checkRateLimit, clientIp, rateLimitedResponse } from "@/lib/rateLimit";
+
+const CREDENTIALS_RATE_LIMIT = { max: 10, windowSeconds: 10 * 60 };
 
 export async function GET() {
   try {
@@ -15,6 +18,9 @@ export async function GET() {
 
 export async function PATCH(req: Request) {
   try {
+    const rate = await checkRateLimit(`credentials:${clientIp(req)}`, CREDENTIALS_RATE_LIMIT);
+    if (!rate.allowed) return rateLimitedResponse(rate.retryAfterSeconds);
+
     const body = (await req.json().catch(() => null)) as {
       currentPassword?: unknown;
       newUsername?: unknown;
