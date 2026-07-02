@@ -159,6 +159,22 @@ export async function verifyAdminSessionCookieValue(
 export function verifyAdminSecret(candidate: string): boolean {
   const secret = process.env.ADMIN_SECRET;
   if (!secret) return false;
-  return candidate === secret;
+  return timingSafeEqualStrings(candidate, secret);
+}
+
+// Constant-time string compare (Web Crypto only, so this stays safe to bundle
+// into both the Node route handler and the edge proxy). A naive `===` bails
+// out on the first mismatched byte, letting a network attacker recover the
+// admin secret one character at a time by timing responses.
+function timingSafeEqualStrings(a: string, b: string): boolean {
+  const enc = new TextEncoder();
+  const aBytes = enc.encode(a);
+  const bBytes = enc.encode(b);
+  const maxLen = Math.max(aBytes.length, bBytes.length);
+  let diff = aBytes.length === bBytes.length ? 0 : 1;
+  for (let i = 0; i < maxLen; i++) {
+    diff |= (aBytes[i] ?? 0) ^ (bBytes[i] ?? 0);
+  }
+  return diff === 0;
 }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 export function useToast() {
   const [msg, setMsg] = useState<string | null>(null);
@@ -11,19 +11,20 @@ export function useToast() {
     return () => clearTimeout(t);
   }, [msg]);
 
-  return {
-    toast: msg,
-    showToast: (m: string) => {
-      setMsg(m);
-      if (typeof navigator !== "undefined" && "vibrate" in navigator) {
-        try {
-          navigator.vibrate(10);
-        } catch {
-          /* ignore */
-        }
+  // Stable across renders so callers can safely list it as a useCallback/useMemo
+  // dependency without that dependency forcing a fresh function every render.
+  const showToast = useCallback((m: string) => {
+    setMsg(m);
+    if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+      try {
+        navigator.vibrate(10);
+      } catch {
+        /* ignore */
       }
-    },
-  };
+    }
+  }, []);
+
+  return { toast: msg, showToast };
 }
 
 export function Toast({ message }: { message: string | null }) {

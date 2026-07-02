@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { whatsAppLink } from "@/lib/marketingConfig";
 
 export function MarketingFooter() {
@@ -8,7 +9,15 @@ export function MarketingFooter() {
         <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <div className="flex items-center gap-2">
-              <Image src="/marketing/mark.png" alt="" width={28} height={28} className="h-7 w-7" />
+              <Image
+                src="/marketing/mark.png"
+                alt=""
+                width={28}
+                height={28}
+                sizes="28px"
+                loading="lazy"
+                className="h-7 w-7"
+              />
               <p className="text-lg font-bold text-zinc-900">RoundMate</p>
             </div>
             <p className="mt-2 max-w-sm text-sm text-zinc-600">
@@ -29,7 +38,9 @@ export function MarketingFooter() {
         </div>
         <p className="mt-8 text-xs text-zinc-500">
           Your data is yours — exportable any time, never sold. © {new Date().getFullYear()}{" "}
-          RoundMate.
+          RoundMate. <Link href="/privacy" className="underline hover:text-zinc-700">
+            Privacy policy
+          </Link>
         </p>
       </div>
     </footer>

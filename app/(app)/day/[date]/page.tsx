@@ -2,10 +2,13 @@ import Link from "next/link";
 import { AppHeader } from "@/components/AppHeader";
 import { DayJobsClient } from "@/components/DayJobsClient";
 import { DaySummaryBar } from "@/components/DaySummaryBar";
+import { DayStrip } from "@/components/DayStrip";
 import { TextChecklist } from "@/components/TextChecklist";
 import { listedJobToVm } from "@/lib/dayJobVm";
 import { buildDayView } from "@/lib/dayView";
+import { addDays } from "@/lib/schedule";
 import { isIsoDate } from "@/lib/models";
+import type { IsoDate } from "@/lib/models";
 import { formatDisplayDate } from "@/lib/formatDate";
 import { getAppSettings } from "@/lib/settings";
 
@@ -34,6 +37,15 @@ export default async function DayPage({
   const { jobs, finalOrder } = await buildDayView(date);
   const vms = jobs.map(listedJobToVm);
 
+  const stripStart = addDays(date, -3);
+  const weekDays = await Promise.all(
+    Array.from({ length: 7 }).map(async (_, i) => {
+      const d = addDays(stripStart, i);
+      const { jobs: dayJobs } = await buildDayView(d);
+      return { date: d as IsoDate, count: dayJobs.length };
+    }),
+  );
+
   return (
     <>
       <AppHeader
@@ -49,6 +61,7 @@ export default async function DayPage({
       />
       <main className="mx-auto w-full max-w-lg flex-1 px-4 py-4">
         <div className="flex flex-col gap-3">
+          <DayStrip days={weekDays} activeDate={date} />
           <DaySummaryBar jobs={vms} date={date} />
           <TextChecklist date={date} jobs={vms} settings={settings} />
           <DayJobsClient

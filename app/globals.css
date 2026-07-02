@@ -15,10 +15,15 @@
   --font-mono: var(--font-geist-mono);
 }
 
+html {
+  overscroll-behavior-y: none;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  overscroll-behavior-y: none;
 }
 
 /* Better mobile tap behaviour */
@@ -37,8 +42,38 @@ a {
   }
 }
 
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.35s ease-out both;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-smooth {
+  animation: spin 0.7s linear infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .marketing [data-reveal] {
     transition-duration: 0.01ms !important;
+  }
+
+  .animate-fade-in-up,
+  .animate-spin-smooth {
+    animation: none !important;
   }
 }

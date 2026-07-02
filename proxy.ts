@@ -19,6 +19,7 @@ const ADMIN_PUBLIC_PATHS = ["/admin/login", "/api/admin/auth/login"];
 const PATH_ALIASES: Record<string, string> = {
   "/": "/marketing",
   "/demo": "/marketing/demo",
+  "/privacy": "/marketing/privacy",
 };
 
 // "/archers" is a permanent legacy alias to the original tenant's slug —
@@ -57,8 +58,15 @@ export async function proxy(req: NextRequest) {
     pathname.startsWith("/robots") ||
     pathname.startsWith("/sitemap") ||
     pathname.startsWith("/icons") ||
-    pathname.startsWith("/images")
+    pathname.startsWith("/images") ||
+    pathname === "/sw.js" ||
+    pathname === "/manifest.json" ||
+    pathname === "/offline"
   ) {
+    // Service worker scripts must never be served via a redirect — browsers
+    // refuse to install them — so /sw.js (and the manifest/offline page it
+    // depends on) has to stay reachable regardless of auth state, including
+    // for the signed-out visitor on /login whose browser registers it.
     return NextResponse.next();
   }
 

@@ -1,10 +1,10 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useMemo } from "react";
+import { useCallback, useState } from "react";
 import type { DayJobVM } from "@/components/DayJobsClient";
 import { TodayTabsClient } from "@/components/TodayTabsClient";
 import type { OverdueVM } from "@/components/OverdueClient";
+import { DayStrip } from "@/components/DayStrip";
 import { ScheduleWeekPanel } from "@/components/ScheduleWeekPanel";
 import { WeekSummaryPanel } from "@/components/WeekSummaryPanel";
 import { ScheduleMorePanel } from "@/components/ScheduleMorePanel";
@@ -43,6 +43,7 @@ export function ScheduleTabsClient({
   overdue,
   weekDays,
   settings,
+  initialTab,
 }: {
   date: string;
   jobs: DayJobVM[];
@@ -50,27 +51,26 @@ export function ScheduleTabsClient({
   overdue: OverdueVM[];
   weekDays: { date: IsoDate; count: number }[];
   settings: AppSettings;
+  initialTab: ScheduleTab;
 }) {
-  const searchParams = useSearchParams();
-  const router = useRouter();
+  const [tab, setTabState] = useState<ScheduleTab>(initialTab);
 
-  const tab = useMemo((): ScheduleTab => {
-    const t = searchParams.get("tab");
-    if (t === "week" || t === "more" || t === "day") return t;
-    return "day";
-  }, [searchParams]);
-
-  const setTab = useCallback(
-    (next: ScheduleTab) => {
-      const params = new URLSearchParams(searchParams.toString());
-      params.set("tab", next);
-      router.replace(`/schedule?${params.toString()}`, { scroll: false });
-    },
-    [router, searchParams],
-  );
+  // Switching tabs is purely a client-side state change — every job, week,
+  // and overdue prop is already on the client. Routing through next/navigation
+  // would re-fetch this (force-dynamic) page's RSC payload over the network
+  // on every tap, which stalls the whole switch on slow or flaky connections.
+  // history.replaceState keeps the URL bookmarkable/shareable without that.
+  const setTab = useCallback((next: ScheduleTab) => {
+    setTabState(next);
+    const url = new URL(window.location.href);
+    url.searchParams.set("tab", next);
+    window.history.replaceState(window.history.state, "", url);
+  }, []);
 
   return (
     <div className="flex flex-col gap-3">
+      <DayStrip days={weekDays} activeDate={date} />
+
       <div className="grid grid-cols-3 rounded-xl border border-zinc-200 bg-zinc-50 p-1">
         <Segment active={tab === "day"} onClick={() => setTab("day")}>
           Day

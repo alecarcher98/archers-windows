@@ -1,6 +1,7 @@
 import { sql } from "@vercel/postgres";
 
 let didInit = false;
+let initPromise: Promise<void> | null = null;
 
 function hasPostgresEnv() {
   return Boolean(
@@ -15,10 +16,10 @@ export function isPostgresEnabled() {
   return hasPostgresEnv();
 }
 
-/** Idempotent migrations safe to run on every request (handles schema added after first boot). */
+/** Idempotent migrations — only need to run once per warm instance (see
+ * ensureSchema below); a new deploy gets a fresh instance, so schema added
+ * after first boot is still picked up without a manual migration step. */
 async function ensureMigrations() {
-  if (!isPostgresEnabled()) return;
-
   await sql`
     create table if not exists app_settings (
       id text primary key,
@@ -52,10 +53,21 @@ async function ensureMigrations() {
 
 export async function ensureSchema() {
   if (!isPostgresEnabled()) return;
-
-  await ensureMigrations();
-
   if (didInit) return;
+  // Concurrent requests on a fresh instance all await the same in-flight
+  // init instead of each kicking off their own redundant DDL.
+  if (!initPromise) {
+    initPromise = runSchemaInit().catch((err) => {
+      // Let the next call retry instead of caching a transient failure forever.
+      initPromise = null;
+      throw err;
+    });
+  }
+  await initPromise;
+}
+
+async function runSchemaInit() {
+  await ensureMigrations();
 
   await sql`
     create table if not exists customers (
