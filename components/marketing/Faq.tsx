@@ -15,8 +15,8 @@ const FAQS = [
     a: "Message me on WhatsApp and I'll update it. Most changes take minutes.",
   },
   {
-    q: "Is this only for window cleaning?",
-    a: "It's built for window cleaning rounds first — that's what it was made for. The same setup fits any round with repeat customers on a schedule (general cleaning, gutters), but window cleaning is what it's tuned for.",
+    q: "Is this only for one type of cleaning round?",
+    a: "No — it's built for any cleaning round with repeat customers on a schedule: window cleaning, general cleaning, gutters, whatever you run.",
   },
 ];
 

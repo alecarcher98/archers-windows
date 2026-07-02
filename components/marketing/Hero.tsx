@@ -25,7 +25,7 @@ export function Hero() {
           <div className="text-center lg:text-left">
             <RevealOnScroll>
               <p className="inline-flex items-center rounded-full bg-[var(--brand-tint)] px-3 py-1 text-sm font-semibold text-[var(--brand-dark)]">
-                Built for real window rounds, not boardrooms
+                Built for real cleaning rounds, not boardrooms
               </p>
             </RevealOnScroll>
             <RevealOnScroll delay={80}>

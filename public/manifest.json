@@ -1,7 +1,7 @@
 {
   "name": "RoundMate",
   "short_name": "RoundMate",
-  "description": "Window cleaning job scheduler",
+  "description": "Cleaning round job scheduler",
   "start_url": "/schedule",
   "display": "standalone",
   "background_color": "#fff1e8",

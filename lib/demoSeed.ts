@@ -6,7 +6,7 @@ export const DEMO_BUSINESS_NAME = "Cleaning Co";
 export const DEMO_SETTINGS: AppSettings = {
   businessName: DEMO_BUSINESS_NAME,
   smsTemplate: `Good {{greeting}},
-Your windows have been cleaned on {{todayDate}} for the value of {{houseValue}}
+Your clean has been completed on {{todayDate}} for the value of {{houseValue}}
 Thanks,
 {{businessName}}`,
   compactMode: false,

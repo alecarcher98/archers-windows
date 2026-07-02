@@ -68,7 +68,7 @@ export default function NewCompanyPage() {
             <input
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
-              placeholder="e.g. Dave's Window Cleaning"
+              placeholder="e.g. Dave's Cleaning Services"
               className="h-12 rounded-xl border border-zinc-200 bg-white px-3 text-base text-zinc-900 shadow-sm outline-none focus:border-[var(--brand)]"
             />
           </label>

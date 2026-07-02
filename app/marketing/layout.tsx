@@ -10,14 +10,14 @@ const SITE_URL =
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: "RoundMate — done-for-you round management for window cleaners",
+  title: "RoundMate — done-for-you round management for cleaners",
   description:
-    "Done-for-you round management for window cleaning rounds (and other cleaning rounds too). Send your customer list and I'll have your round — who's due, who's paid, gate codes and skipped cleans — running on your phone within 24 hours.",
+    "Done-for-you round management for cleaning rounds. Send your customer list and I'll have your round — who's due, who's paid, gate codes and skipped cleans — running on your phone within 24 hours.",
   manifest: "/marketing/manifest.json",
   appleWebApp: { capable: true, title: "RoundMate" },
   openGraph: {
     title: "RoundMate",
-    description: "Done-for-you round management for window cleaners. Your round, simplified.",
+    description: "Done-for-you round management for cleaners. Your round, simplified.",
     type: "website",
     url: "/",
   },

@@ -1,4 +1,4 @@
-Mobile job scheduler for window cleaning rounds.
+Mobile job scheduler for cleaning rounds.
 
 ## App navigation
 

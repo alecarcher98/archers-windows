@@ -57,7 +57,7 @@ export type AppSettings = {
 export const DEFAULT_APP_SETTINGS: AppSettings = {
   businessName: "RoundMate",
   smsTemplate: `Good {{greeting}},
-Your windows have been cleaned on {{todayDate}} for the value of {{houseValue}}
+Your clean has been completed on {{todayDate}} for the value of {{houseValue}}
 Thanks,
 {{businessName}}`,
   compactMode: false,

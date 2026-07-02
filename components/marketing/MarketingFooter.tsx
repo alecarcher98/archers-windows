@@ -12,8 +12,8 @@ export function MarketingFooter() {
               <p className="text-lg font-bold text-zinc-900">RoundMate</p>
             </div>
             <p className="mt-2 max-w-sm text-sm text-zinc-600">
-              Done-for-you round management for window cleaners — your round, on your phone,
-              nothing you don&rsquo;t need. Also fits other cleaning rounds.
+              Done-for-you round management for cleaners — your round, on your phone,
+              nothing you don&rsquo;t need.
             </p>
           </div>
           <div className="flex flex-col gap-2 text-sm">
