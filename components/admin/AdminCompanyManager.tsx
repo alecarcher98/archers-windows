@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { Customer } from "@/lib/models";
 import type { Company } from "@/lib/tenant";
 import { parseCustomerCsv, type ParsedCustomerDraft } from "@/lib/csvImport";
@@ -22,6 +22,7 @@ export function AdminCompanyManager({
   return (
     <div className="flex flex-col gap-4">
       <CompanyDetailsSection company={company} />
+      <CredentialsSection companyId={company.id} />
       <CsvImportSection companyId={company.id} />
       <CustomerListSection
         companyId={company.id}
@@ -90,6 +91,107 @@ function CompanyDetailsSection({ company }: { company: Company }) {
           {pending ? "Saving…" : saved ? "Saved" : "Save"}
         </button>
       </div>
+    </div>
+  );
+}
+
+function CredentialsSection({ companyId }: { companyId: string }) {
+  const [currentUsername, setCurrentUsername] = useState<string | null>(null);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`/api/admin/companies/${companyId}/credentials`)
+      .then((res) => res.json())
+      .then((json: { ok?: boolean; username?: string }) => {
+        if (cancelled || !json.ok || !json.username) return;
+        setCurrentUsername(json.username);
+        setUsername(json.username);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [companyId]);
+
+  async function onReset() {
+    setPending(true);
+    setError(null);
+    setSaved(false);
+    try {
+      const res = await fetch(`/api/admin/companies/${companyId}/credentials`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+      const json = (await res.json()) as { ok?: boolean; error?: string; username?: string };
+      if (!res.ok || !json.ok) {
+        setError(json.error ?? "Could not reset login");
+        return;
+      }
+      setCurrentUsername(json.username ?? username);
+      setSaved(true);
+    } catch {
+      setError("Could not reset login. Try again.");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return (
+    <div className="rounded-3xl border border-zinc-200 bg-white p-4 shadow-sm">
+      <p className="text-sm font-semibold text-zinc-900">Login credentials</p>
+      <p className="mt-0.5 text-xs text-zinc-600">
+        {currentUsername
+          ? `Current username: ${currentUsername}. `
+          : ""}
+        Resetting takes effect immediately and signs the company out of any existing session —
+        share the new password with them directly.
+      </p>
+
+      <div className="mt-3 grid gap-2 sm:max-w-sm">
+        <label className="grid gap-1">
+          <span className="text-xs font-medium text-zinc-700">Username</span>
+          <input
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            className="h-10 rounded-xl border border-zinc-200 px-3 text-sm text-zinc-900 shadow-sm outline-none focus:border-[var(--brand)]"
+          />
+        </label>
+        <label className="grid gap-1">
+          <span className="text-xs font-medium text-zinc-700">New password</span>
+          <input
+            type="text"
+            value={password}
+            onChange={(e) => {
+              setPassword(e.target.value);
+              setSaved(false);
+            }}
+            placeholder="Enter a new password"
+            className="h-10 rounded-xl border border-zinc-200 px-3 text-sm text-zinc-900 shadow-sm outline-none focus:border-[var(--brand)]"
+          />
+        </label>
+      </div>
+
+      {error ? <p className="mt-2 text-sm font-medium text-red-600">{error}</p> : null}
+      {saved && !error ? (
+        <p className="mt-2 text-sm font-medium text-emerald-700">
+          Login reset — pass the new username and password to the company now.
+        </p>
+      ) : null}
+
+      <button
+        type="button"
+        onClick={() => void onReset()}
+        disabled={pending || !username.trim() || !password}
+        className="mt-3 h-10 rounded-full bg-zinc-900 px-4 text-sm font-semibold text-white shadow-sm hover:bg-zinc-800 disabled:opacity-40"
+      >
+        {pending ? "Resetting…" : "Reset login"}
+      </button>
     </div>
   );
 }
