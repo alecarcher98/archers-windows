@@ -2,6 +2,7 @@ import type { Customer, DayRecord, IsoDate, PriceHistoryEntry } from "@/lib/mode
 import { localKv } from "@/lib/localKv";
 import { ensureSchema, isPostgresEnabled } from "@/lib/db";
 import { getCurrentCompanyId } from "@/lib/tenant";
+import { decryptField, decryptFieldOrNull, encryptField, encryptFieldOrNull } from "@/lib/encryption";
 
 type PgRow<T> = { rows: T[] };
 
@@ -39,19 +40,25 @@ type CustomerRow = Customer & {
   priceHistory?: PriceHistoryEntry[] | null;
 };
 
-function mapCustomerRow(row: CustomerRow): Customer {
+async function mapCustomerRow(row: CustomerRow): Promise<Customer> {
+  const [address, street, phone, notes] = await Promise.all([
+    decryptField(row.address),
+    decryptFieldOrNull(row.street),
+    decryptFieldOrNull(row.phone),
+    decryptFieldOrNull(row.notes),
+  ]);
   return {
     id: row.id,
     name: row.name,
-    address: row.address,
-    street: row.street ?? undefined,
-    phone: row.phone ?? undefined,
+    address,
+    street,
+    phone,
     defaultPricePence: row.defaultPricePence,
     startDate: row.startDate,
     frequencyWeeks: row.frequencyWeeks,
     oneOff: Boolean(row.oneOff),
     active: row.active,
-    notes: row.notes ?? undefined,
+    notes,
     pausedUntil: (row.pausedUntil as IsoDate | null) ?? undefined,
     priceHistory: Array.isArray(row.priceHistory) ? row.priceHistory : undefined,
   };
@@ -121,7 +128,7 @@ export async function getCustomersByIds(
       from customers
       where company_id = ${companyId}::uuid and id = any(${ids as unknown as never}::uuid[])
     `) as PgRow<CustomerRow>;
-    return res.rows.map(mapCustomerRow);
+    return Promise.all(res.rows.map(mapCustomerRow));
   }
   const ks = ids.map((id) => keys.customer(companyId, id));
   const rows = await kv.mget(...ks);
@@ -153,7 +160,7 @@ export async function getCustomer(id: string, companyIdOverride?: string): Promi
       limit 1
     `) as PgRow<CustomerRow>;
     const row = res.rows[0];
-    return row ? mapCustomerRow(row) : null;
+    return row ? await mapCustomerRow(row) : null;
   }
   const c = (await kv.get(keys.customer(companyId, id))) as Customer | null;
   return c ?? null;
@@ -165,6 +172,12 @@ export async function putCustomer(customer: Customer, companyIdOverride?: string
     await ensureSchema();
     const sql = await pg();
     const historyJson = JSON.stringify(customer.priceHistory ?? []);
+    const [encAddress, encStreet, encPhone, encNotes] = await Promise.all([
+      encryptField(customer.address),
+      encryptFieldOrNull(customer.street),
+      encryptFieldOrNull(customer.phone),
+      encryptFieldOrNull(customer.notes),
+    ]);
     await sql`
       insert into customers (
         id, company_id, name, address, street, phone,
@@ -174,15 +187,15 @@ export async function putCustomer(customer: Customer, companyIdOverride?: string
         ${customer.id}::uuid,
         ${companyId}::uuid,
         ${customer.name},
-        ${customer.address},
-        ${customer.street ?? null},
-        ${customer.phone ?? null},
+        ${encAddress},
+        ${encStreet},
+        ${encPhone},
         ${customer.defaultPricePence},
         ${customer.startDate}::date,
         ${customer.frequencyWeeks},
         ${customer.oneOff ?? false},
         ${customer.active},
-        ${customer.notes ?? null},
+        ${encNotes},
         ${customer.pausedUntil ?? null}::date,
         ${historyJson}::jsonb
       )
