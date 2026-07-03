@@ -49,6 +49,14 @@ async function ensureMigrations() {
   await sql`alter table removed add column if not exists company_id uuid references companies(id)`;
   await sql`alter table days add column if not exists company_id uuid references companies(id)`;
   await sql`alter table app_settings add column if not exists company_id uuid references companies(id)`;
+
+  await sql`
+    create table if not exists rate_limits (
+      id text primary key,
+      count integer not null,
+      reset_at timestamptz not null
+    );
+  `;
 }
 
 export async function ensureSchema() {
