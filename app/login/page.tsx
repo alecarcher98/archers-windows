@@ -45,8 +45,21 @@ function LoginInner() {
         setError("Unknown company link.");
         return;
       }
-      if (!res.ok) {
+      if (res.status === 429) {
+        const retryAfter = res.headers.get("retry-after");
+        setError(
+          retryAfter
+            ? `Too many attempts. Try again in ${retryAfter}s.`
+            : "Too many attempts. Try again later.",
+        );
+        return;
+      }
+      if (res.status === 401) {
         setError("Incorrect username or password.");
+        return;
+      }
+      if (!res.ok) {
+        setError("Something went wrong. Try again.");
         return;
       }
       router.replace(nextPath);

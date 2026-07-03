@@ -36,31 +36,39 @@ export async function checkRateLimit(
 ): Promise<RateLimitResult> {
   const bucketKey = `ratelimit:${key}`;
 
-  if (hasRemoteKvEnv()) {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const kv = (require("@vercel/kv") as { kv: RemoteKv }).kv;
-    const count = await kv.incr(bucketKey);
-    if (count === 1) {
-      await kv.expire(bucketKey, windowSeconds);
+  try {
+    if (hasRemoteKvEnv()) {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const kv = (require("@vercel/kv") as { kv: RemoteKv }).kv;
+      const count = await kv.incr(bucketKey);
+      if (count === 1) {
+        await kv.expire(bucketKey, windowSeconds);
+      }
+      if (count > max) {
+        const ttl = await kv.ttl(bucketKey);
+        return { allowed: false, retryAfterSeconds: ttl > 0 ? ttl : windowSeconds };
+      }
+      return { allowed: true, retryAfterSeconds: 0 };
     }
-    if (count > max) {
-      const ttl = await kv.ttl(bucketKey);
-      return { allowed: false, retryAfterSeconds: ttl > 0 ? ttl : windowSeconds };
-    }
-    return { allowed: true, retryAfterSeconds: 0 };
-  }
 
-  const now = Date.now();
-  const existing = (await localKv.get<LocalBucket>(bucketKey)) ?? null;
-  if (!existing || existing.resetAt <= now) {
-    await localKv.set(bucketKey, { count: 1, resetAt: now + windowSeconds * 1000 });
+    const now = Date.now();
+    const existing = (await localKv.get<LocalBucket>(bucketKey)) ?? null;
+    if (!existing || existing.resetAt <= now) {
+      await localKv.set(bucketKey, { count: 1, resetAt: now + windowSeconds * 1000 });
+      return { allowed: true, retryAfterSeconds: 0 };
+    }
+    if (existing.count >= max) {
+      return { allowed: false, retryAfterSeconds: Math.ceil((existing.resetAt - now) / 1000) };
+    }
+    await localKv.set(bucketKey, { count: existing.count + 1, resetAt: existing.resetAt });
+    return { allowed: true, retryAfterSeconds: 0 };
+  } catch (err) {
+    // Rate limiting is defense-in-depth, not core function — a storage
+    // failure (e.g. the local JSON-file fallback hitting a read-only
+    // filesystem on serverless) must never lock every user out of login.
+    console.error("checkRateLimit: storage error, failing open", err);
     return { allowed: true, retryAfterSeconds: 0 };
   }
-  if (existing.count >= max) {
-    return { allowed: false, retryAfterSeconds: Math.ceil((existing.resetAt - now) / 1000) };
-  }
-  await localKv.set(bucketKey, { count: existing.count + 1, resetAt: existing.resetAt });
-  return { allowed: true, retryAfterSeconds: 0 };
 }
 
 /** Best-effort client identifier for rate-limit keys — proxies (Vercel, etc.)
